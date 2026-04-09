@@ -13,13 +13,13 @@ Install
 Recommended with `uv`:
 
 ```bash
-uv tool install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.0/eastbridge_rps_client_kit-0.1.0-py3-none-any.whl
+uv tool install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.1/eastbridge_rps_client_kit-0.1.1-py3-none-any.whl
 ```
 
 Or with `pipx`:
 
 ```bash
-pipx install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.0/eastbridge_rps_client_kit-0.1.0-py3-none-any.whl
+pipx install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.1/eastbridge_rps_client_kit-0.1.1-py3-none-any.whl
 ```
 
 If you already cloned this repository:
@@ -107,5 +107,4 @@ Bundled House Bots
 Release Workflow
 ----------------
 
-Tags like `v0.1.0` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.
-
+Tags like `v0.1.1` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.

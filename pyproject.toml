@@ -1,0 +1,41 @@
+[project]
+name = "eastbridge-rps-client-kit"
+version = "0.1.0"
+description = "Participant CLI, SDK, and house bots for the Eastbridge RPS tournament"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+authors = [{ name = "Eastbridge Academy" }]
+dependencies = [
+    "httpx>=0.27.0",
+    "rich>=13.7.0",
+    "typer>=0.12.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/Eastbridge-Academy/rps-client-kit"
+Repository = "https://github.com/Eastbridge-Academy/rps-client-kit"
+Issues = "https://github.com/Eastbridge-Academy/rps-client-kit/issues"
+
+[project.scripts]
+rps-cli = "rps_client.cli:app"
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2",
+    "pytest>=8.1.1",
+    "pytest-cov>=5.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rps_client*", "rpsdk*", "rps_house_bots*"]
+
+[tool.setuptools.package-data]
+rps_client = ["starter/*.py"]

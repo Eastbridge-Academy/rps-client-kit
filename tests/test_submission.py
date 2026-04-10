@@ -41,7 +41,7 @@ def test_submit_bot_archive_success(monkeypatch, tmp_path, capsys):
         captured["headers"] = headers
         captured["data"] = data
         captured["files"] = files
-        return DummyResponse(payload={"message": "ok"})
+        return DummyResponse(payload={"message": "Submission received and queued for validation."})
 
     monkeypatch.setattr(httpx, "post", fake_post)
 
@@ -64,7 +64,7 @@ def test_submit_bot_archive_success(monkeypatch, tmp_path, capsys):
         assert zf.read("bot.py").decode() == "print('hi')\n"
 
     out = capsys.readouterr().out
-    assert "Submission uploaded and activated." in out
+    assert "queued for validation" in out
 
 
 def test_submit_bot_archive_requires_token(tmp_path):
@@ -93,4 +93,3 @@ def test_submit_bot_archive_handles_http_error(monkeypatch, tmp_path):
 
     with pytest.raises(SystemExit):
         submit_bot_archive(team_name="Team", bot_path=bot_file, notes=None, config=config)
-

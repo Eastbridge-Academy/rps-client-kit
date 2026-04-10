@@ -1,6 +1,6 @@
 [project]
 name = "eastbridge-rps-client-kit"
-version = "0.1.1"
+version = "0.1.2"
 description = "Participant CLI, SDK, and house bots for the Eastbridge RPS tournament"
 readme = "README.md"
 requires-python = ">=3.11,<4"

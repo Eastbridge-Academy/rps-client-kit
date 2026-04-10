@@ -13,13 +13,13 @@ Install
 Recommended with `uv`:
 
 ```bash
-uv tool install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.1/eastbridge_rps_client_kit-0.1.1-py3-none-any.whl
+uv tool install git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.1.2
 ```
 
 Or with `pipx`:
 
 ```bash
-pipx install https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.1.1/eastbridge_rps_client_kit-0.1.1-py3-none-any.whl
+pipx install git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.1.2
 ```
 
 If you already cloned this repository:
@@ -64,6 +64,12 @@ rps-cli submit "Team Name" --email you@example.com
 
 The CLI sends the shared token as `X-Submit-Token`.
 
+Check your latest submission state with:
+
+```bash
+rps-cli status "Team Name"
+```
+
 Bot Contract
 ------------
 
@@ -107,4 +113,4 @@ Bundled House Bots
 Release Workflow
 ----------------
 
-Tags like `v0.1.1` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.
+Tags like `v0.1.2` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.

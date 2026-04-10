@@ -63,7 +63,12 @@ def submit_bot_archive(
         console.print(f"[red]Submission failed ({response.status_code}): {detail}")
         raise SystemExit(1)
 
-    console.print("[green]Submission uploaded and activated.")
+    message = "Submission uploaded and queued for validation."
+    try:
+        message = response.json().get("message", message)
+    except Exception:
+        pass
+    console.print(f"[green]{message}")
 
 
 def _build_submission_archive(bot_path: Path) -> bytes:

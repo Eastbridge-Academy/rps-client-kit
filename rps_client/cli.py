@@ -7,6 +7,7 @@ import typer
 
 from rps_client.config import ConfigStore
 from rps_client.simulator import run_local_simulation
+from rps_client.status import show_bot_status
 from rps_client.submission import submit_bot_archive
 
 app = typer.Typer(name="rps-cli", help="Eastbridge RPS participant toolkit")
@@ -44,9 +45,9 @@ def play(against: Optional[str] = typer.Option(None, help="Comma separated list 
 
 
 @app.command()
-def status() -> None:
+def status(team_name: str) -> None:
     """Show latest submission status."""
-    typer.echo("Status feature TBD")
+    show_bot_status(team_name=team_name, config=config)
 
 
 @config_app.command("set")

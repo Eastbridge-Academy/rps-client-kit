@@ -53,5 +53,22 @@ def show_bot_status(*, team_name: str, config: ConfigStore) -> None:
         console.print(f"Latest version: v{latest['version']} ({latest['status']})")
         if latest.get("rejection_reason"):
             console.print(f"Rejection reason: {latest['rejection_reason']}")
+        guidance = _status_guidance(latest_status=latest["status"], rejection_reason=latest.get("rejection_reason"))
+        if guidance:
+            console.print(guidance)
     else:
         console.print("Latest version: none")
+
+
+def _status_guidance(*, latest_status: str, rejection_reason: str | None) -> str | None:
+    if latest_status == "uploaded":
+        return "Status note: upload received and waiting for the validation worker."
+    if latest_status == "validating":
+        return "Status note: validation is currently running."
+    if latest_status == "rejected":
+        if rejection_reason:
+            return "Status note: fix the rejection reason locally, rerun `rps-cli validate`, then submit again."
+        return "Status note: validation failed. Rerun `rps-cli validate` before submitting again."
+    if latest_status == "active":
+        return "Status note: your latest version is active in the tournament."
+    return None

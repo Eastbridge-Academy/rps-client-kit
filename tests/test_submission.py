@@ -65,6 +65,7 @@ def test_submit_bot_archive_success(monkeypatch, tmp_path, capsys):
 
     out = capsys.readouterr().out
     assert "queued for validation" in out
+    assert 'rps-cli status "Team"' in out
 
 
 def test_submit_bot_archive_requires_token(tmp_path):

@@ -46,6 +46,35 @@ def test_show_bot_status_displays_active_and_latest_versions(monkeypatch, tmp_pa
     assert "Active version: v2 (active)" in out
     assert "Latest version: v3 (rejected)" in out
     assert "Rejection reason: Import failed" in out
+    assert "rerun `rps-cli validate`" in out
+    assert "submit again" in out
+
+
+def test_show_bot_status_explains_uploaded_state(monkeypatch, tmp_path, capsys):
+    config = ConfigStore(path=tmp_path / "config.json")
+    config.api_url = "http://example.com"
+
+    responses = iter(
+        [
+            DummyResponse(payload=[{"id": 3, "team_name": "Queued Team"}]),
+            DummyResponse(
+                payload={
+                    "bot_id": 3,
+                    "team_name": "Queued Team",
+                    "operator_status": "active",
+                    "active_version": None,
+                    "latest_version": {"id": 9, "version": 1, "status": "uploaded", "created_at": "2026-04-10T00:01:00Z", "rejection_reason": None},
+                }
+            ),
+        ]
+    )
+    monkeypatch.setattr(httpx, "get", lambda *args, **kwargs: next(responses))
+
+    show_bot_status(team_name="Queued Team", config=config)
+
+    out = capsys.readouterr().out
+    assert "Latest version: v1 (uploaded)" in out
+    assert "waiting for the validation worker" in out
 
 
 def test_show_bot_status_errors_when_team_missing(monkeypatch, tmp_path):

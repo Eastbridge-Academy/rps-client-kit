@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,6 +11,7 @@ from typing import Callable, Iterable, Optional
 from rich.console import Console
 from rich.table import Table
 
+from rps_client.participant_bot import load_participant_bot
 from rps_client import rpsdk
 from rps_house_bots import BotSpec, get_bot_source, list_bots
 
@@ -33,12 +33,17 @@ class SimulationResult:
     errors: int
 
 
-def run_local_simulation(opponent_names: Optional[Iterable[str]] = None, *, best_of: int = 101) -> None:
+def run_local_simulation(
+    opponent_names: Optional[Iterable[str]] = None,
+    *,
+    best_of: int = 101,
+    bot_path: Path = Path("bot.py"),
+) -> None:
     """Execute local matches against built-in opponents and display results."""
     try:
-        participant = _load_participant_bot(Path("bot.py"))
+        participant = load_participant_bot(bot_path).next_move
     except Exception as exc:  # pragma: no cover - CLI surface
-        console.print(f"[red]Failed to load bot.py: {exc}")
+        console.print(f"[red]Failed to load {bot_path.name}: {exc}")
         return
 
     opponents = list(opponent_names or AVAILABLE_BOTS.keys())
@@ -69,25 +74,6 @@ def run_local_simulation(opponent_names: Optional[Iterable[str]] = None, *, best
         )
 
     console.print(table)
-
-
-def _load_participant_bot(path: Path) -> Callable[[list[Move], list[Move], dict], Move]:
-    if not path.exists():
-        raise FileNotFoundError("No bot.py found in current directory")
-
-    spec = importlib.util.spec_from_file_location("participant_bot", path)
-    if spec is None or spec.loader is None:
-        raise ImportError("Unable to load bot.py")
-
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)  # type: ignore[assignment]
-
-    if not hasattr(module, "next_move"):
-        raise AttributeError("bot.py must define a next_move function")
-    next_move = getattr(module, "next_move")
-    if not callable(next_move):
-        raise TypeError("next_move must be callable")
-    return next_move
 
 
 def _simulate_series(

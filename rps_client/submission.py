@@ -69,6 +69,7 @@ def submit_bot_archive(
     except Exception:
         pass
     console.print(f"[green]{message}")
+    console.print(f'Check progress with: rps-cli status "{team_name}"')
 
 
 def _build_submission_archive(bot_path: Path) -> bytes:

@@ -3,7 +3,7 @@ Eastbridge RPS Client Kit
 
 This repository contains the student-facing tooling for the Eastbridge Rock-Paper-Scissors tournament:
 
-- `rps-cli` for local play and submission
+- `rps-cli` for starter setup, local validation, play, submission, and status
 - `rpsdk` with the shared `Move` enum used by participant bots
 - `rps_house_bots` with the bundled local opponents used by the simulator
 
@@ -13,13 +13,13 @@ Install
 Recommended with `uv`:
 
 ```bash
-uv tool install git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.1.2
+uv tool install git+https://github.com/Eastbridge-Academy/rps-client-kit
 ```
 
 Or with `pipx`:
 
 ```bash
-pipx install git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.1.2
+pipx install git+https://github.com/Eastbridge-Academy/rps-client-kit
 ```
 
 If you already cloned this repository:
@@ -49,7 +49,21 @@ export RPS_SUBMIT_TOKEN=<SUBMIT_TOKEN>
 Quickstart
 ----------
 
-Run local simulations from a folder containing `bot.py`:
+Start a new bot project:
+
+```bash
+rps-cli init my-bot
+cd my-bot
+```
+
+Run a local contract check and short smoke match from a folder containing `bot.py`:
+
+```bash
+rps-cli validate
+rps-cli validate --against rocky,copycat --best-of 9
+```
+
+Run longer local simulations:
 
 ```bash
 rps-cli play
@@ -69,6 +83,8 @@ Check your latest submission state with:
 ```bash
 rps-cli status "Team Name"
 ```
+
+`status` shows the currently active tournament version, your latest submitted version, and any rejection reason returned by validation.
 
 Bot Contract
 ------------
@@ -97,6 +113,13 @@ Current `match_state` keys:
 - `opponent_last_outcome`
 - `timeouts`
 - `opponent_timeouts`
+
+Current local validation checks:
+
+- `bot.py` imports successfully
+- `setup(config)` is optional but must be callable if present
+- `next_move(...)` must be callable and return `rock`, `paper`, or `scissors`
+- `validate` then runs a short local smoke series against bundled house bots
 
 Bundled House Bots
 ------------------

@@ -70,4 +70,3 @@ def next_move(my_history, opponent_history, match_state):
 
     result = _simulate_series(participant, opponent, best_of=7, seed=321)
     assert result.errors == 7
-

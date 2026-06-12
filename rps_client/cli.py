@@ -36,6 +36,7 @@ def info() -> None:
     else:
         typer.echo("Submit token not set. Use `rps-cli config set token <TOKEN>` or set `RPS_SUBMIT_TOKEN`.")
     typer.echo(f"API URL: {config.api_url}")
+    typer.echo(f"League: {config.league}")
 
 
 @app.command()
@@ -91,6 +92,11 @@ def config_set(key: str, value: str) -> None:
         config.save()
         typer.echo("API URL saved.")
         return
+    if key == "league":
+        config.league = value.strip()
+        config.save()
+        typer.echo("League saved.")
+        return
     raise typer.BadParameter("Unsupported config key")
 
 
@@ -103,6 +109,9 @@ def config_get(key: str) -> None:
         return
     if key in {"api_url", "url"}:
         typer.echo(config.api_url)
+        return
+    if key == "league":
+        typer.echo(config.league)
         return
     raise typer.BadParameter("Unsupported config key")
 

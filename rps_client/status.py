@@ -19,20 +19,25 @@ def show_bot_status(*, team_name: str, config: ConfigStore) -> None:
     base_url = config.api_url.rstrip("/")
 
     try:
-        bots_response = httpx.get(f"{base_url}/api/v1/bots", timeout=10.0)
-        bots_response.raise_for_status()
+        # The league leaderboard doubles as the public roster: every
+        # registered bot appears immediately (participation is created at
+        # submission), including ones still validating.
+        roster_response = httpx.get(
+            f"{base_url}/api/v1/leagues/{config.league}/leaderboard", timeout=10.0
+        )
+        roster_response.raise_for_status()
     except httpx.HTTPError as exc:
         console.print(f"[red]Failed to load bot roster: {exc}")
         raise SystemExit(1) from exc
 
-    bots = bots_response.json()
+    bots = roster_response.json()["entries"]
     bot = next((entry for entry in bots if entry["team_name"].casefold() == team_name.casefold()), None)
     if bot is None:
-        console.print(f"[red]No bot found for team '{team_name}'.")
+        console.print(f"[red]No bot found for team '{team_name}' in league '{config.league}'.")
         raise SystemExit(1)
 
     try:
-        status_response = httpx.get(f"{base_url}/api/v1/bots/{bot['id']}/status", timeout=10.0)
+        status_response = httpx.get(f"{base_url}/api/v1/bots/{bot['bot_id']}/status", timeout=10.0)
         status_response.raise_for_status()
     except httpx.HTTPError as exc:
         console.print(f"[red]Failed to load bot status: {exc}")

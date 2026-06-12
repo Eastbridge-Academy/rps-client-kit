@@ -24,7 +24,7 @@ def test_show_bot_status_displays_active_and_latest_versions(monkeypatch, tmp_pa
 
     responses = iter(
         [
-            DummyResponse(payload=[{"id": 7, "team_name": "Team Rocket"}]),
+            DummyResponse(payload={"entries": [{"bot_id": 7, "team_name": "Team Rocket"}]}),
             DummyResponse(
                 payload={
                     "bot_id": 7,
@@ -56,7 +56,7 @@ def test_show_bot_status_explains_uploaded_state(monkeypatch, tmp_path, capsys):
 
     responses = iter(
         [
-            DummyResponse(payload=[{"id": 3, "team_name": "Queued Team"}]),
+            DummyResponse(payload={"entries": [{"bot_id": 3, "team_name": "Queued Team"}]}),
             DummyResponse(
                 payload={
                     "bot_id": 3,
@@ -80,7 +80,7 @@ def test_show_bot_status_explains_uploaded_state(monkeypatch, tmp_path, capsys):
 def test_show_bot_status_errors_when_team_missing(monkeypatch, tmp_path):
     config = ConfigStore(path=tmp_path / "config.json")
     config.api_url = "http://example.com"
-    monkeypatch.setattr(httpx, "get", lambda *args, **kwargs: DummyResponse(payload=[]))
+    monkeypatch.setattr(httpx, "get", lambda *args, **kwargs: DummyResponse(payload={"entries": []}))
 
     with pytest.raises(SystemExit):
         show_bot_status(team_name="Unknown Team", config=config)

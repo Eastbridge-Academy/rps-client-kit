@@ -34,7 +34,9 @@ def submit_bot_archive(
 
     archive_bytes = _build_submission_archive(bot_path)
 
-    url = config.api_url.rstrip("/") + "/api/v1/bots/submit"
+    # Every league-scoped resource lives under /api/v1/leagues/{slug}/ on
+    # the arena; there is deliberately no league-defaulting flat route.
+    url = config.api_url.rstrip("/") + f"/api/v1/leagues/{config.league}/bots/submit"
 
     form_data = {"team_name": team_name}
     if notes:

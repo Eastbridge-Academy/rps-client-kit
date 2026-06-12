@@ -47,7 +47,7 @@ def test_submit_bot_archive_success(monkeypatch, tmp_path, capsys):
 
     submit_bot_archive(team_name="Team", bot_path=bot_file, notes="hello", config=config)
 
-    assert captured["url"] == "http://example.com/api/v1/bots/submit"
+    assert captured["url"] == "http://example.com/api/v1/leagues/rps/bots/submit"
     assert captured["headers"] == {"X-Submit-Token": "secret"}
     assert captured["data"]["team_name"] == "Team"
     assert captured["data"]["notes"] == "hello"

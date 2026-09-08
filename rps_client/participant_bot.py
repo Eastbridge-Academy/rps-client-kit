@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Callable
 
-from rps_client.rpsdk import Move
+from rpsdk import Move
 
 
 class ParticipantBotError(RuntimeError):
@@ -31,6 +32,10 @@ def load_participant_bot(path: Path) -> LoadedParticipantBot:
     if spec is None or spec.loader is None:
         raise ParticipantBotError(f"Unable to load {resolved_path.name}.")
 
+    # Match the worker: sibling helper modules must be importable, including
+    # imports made later inside setup() or next_move(). Practice opponents run
+    # in separate processes, so their helper-module globals never cross matches.
+    sys.path.insert(0, str(resolved_path.parent))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)  # type: ignore[assignment]
 

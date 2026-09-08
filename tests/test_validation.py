@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 
 import pytest
 
@@ -11,7 +10,7 @@ def test_validate_local_bot_runs_smoke_matches(tmp_path, monkeypatch, capsys):
     bot_file = tmp_path / "bot.py"
     bot_file.write_text(
         """
-from rps_client import rpsdk
+import rpsdk
 
 def next_move(my_history, opponent_history, match_state):
     return rpsdk.Move.ROCK
@@ -53,3 +52,10 @@ def test_validate_local_bot_requires_callable_next_move(tmp_path, capsys):
 
     out = capsys.readouterr().out
     assert "callable next_move" in out
+
+
+def test_validate_imports_sibling_helper_without_changing_directory(tmp_path):
+    (tmp_path / "validation_helper.py").write_text("MOVE = 'paper'\n")
+    bot = tmp_path / "bot.py"
+    bot.write_text("def next_move(*args):\n    from validation_helper import MOVE\n    return MOVE\n")
+    validate_local_bot(bot_path=bot, smoke=False)

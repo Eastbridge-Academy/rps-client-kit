@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import io
 import zipfile
+from collections.abc import Iterable
+from importlib import resources
 from pathlib import Path
-from typing import Iterable, Tuple
 
 import httpx
 from rich.console import Console
@@ -47,7 +48,7 @@ def submit_bot_archive(
     try:
         response = httpx.post(
             url,
-            headers={"X-Submit-Token": token},
+            headers={"Authorization": f"Bearer {token}"},
             data=form_data,
             files={"archive": ("submission.zip", archive_bytes, "application/zip")},
             timeout=10.0,
@@ -86,12 +87,13 @@ def _build_submission_archive(bot_path: Path) -> bytes:
             if file_path == bot_path:
                 continue
             zf.write(file_path, arcname=arcname)
+        zf.writestr("rpsdk/__init__.py", resources.files("rpsdk").joinpath("__init__.py").read_text(encoding="utf-8"))
     return buffer.getvalue()
 
 
-def _gather_files(root: Path, bot_filename: str) -> Iterable[Tuple[str, Path]]:
+def _gather_files(root: Path, bot_filename: str) -> Iterable[tuple[str, Path]]:
     """Collect additional files to package with the submission."""
-    entries: list[Tuple[str, Path]] = []
+    entries: list[tuple[str, Path]] = []
 
     optional_files = ["README.md", "README.txt"]
     for name in optional_files:

@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+import multiprocessing
 import random
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
-from typing import Callable, Iterable, Optional
 
 from rich.console import Console
 from rich.table import Table
 
-from rps_client.participant_bot import load_participant_bot
-from rps_client import rpsdk
+import rpsdk
+from rps_client.participant_bot import ParticipantBotError, load_participant_bot
 from rps_house_bots import BotSpec, get_bot_source, list_bots
 
 console = Console()
@@ -34,22 +35,20 @@ class SimulationResult:
 
 
 def run_local_simulation(
-    opponent_names: Optional[Iterable[str]] = None,
+    opponent_names: Iterable[str] | None = None,
     *,
     best_of: int = 101,
     bot_path: Path = Path("bot.py"),
-) -> None:
-    """Execute local matches against built-in opponents and display results."""
-    try:
-        participant = load_participant_bot(bot_path).next_move
-    except Exception as exc:  # pragma: no cover - CLI surface
-        console.print(f"[red]Failed to load {bot_path.name}: {exc}")
-        return
+) -> list[SimulationResult]:
+    """Execute fresh, initialized participant instances for every opponent."""
+    if best_of <= 0:
+        raise ValueError("Series length must be positive")
+    results: list[SimulationResult] = []
 
     opponents = list(opponent_names or AVAILABLE_BOTS.keys())
     if not opponents:
         console.print("[yellow]No opponents selected.")
-        return
+        return results
 
     table = Table(title="Local Simulation", show_lines=False)
     table.add_column("Opponent", style="cyan", justify="left")
@@ -62,8 +61,8 @@ def run_local_simulation(
         if spec is None:
             console.print(f"[yellow]Unknown opponent '{slug}'. Skipping.")
             continue
-        opponent_bot = _load_house_bot(spec, seed=DEFAULT_SEED)
-        result = _simulate_series(participant, opponent_bot, best_of=best_of, seed=DEFAULT_SEED)
+        result = _run_fresh_match(bot_path.resolve(), spec, best_of)
+        results.append(result)
         outcome = _summarise_outcome(result)
         label = f"{spec.display_name} ({spec.slug})"
         table.add_row(
@@ -74,11 +73,61 @@ def run_local_simulation(
         )
 
     console.print(table)
+    return results
+
+
+def _local_match_process(conn, bot_path: Path, spec: BotSpec, best_of: int) -> None:
+    try:
+        loaded = load_participant_bot(bot_path)
+        if loaded.setup is not None:
+            loaded.setup({"seed": DEFAULT_SEED})
+        opponent = _load_house_bot(spec, seed=DEFAULT_SEED ^ 0x45D9F3B)
+        conn.send(
+            _simulate_series(
+                loaded.next_move, opponent, best_of=best_of, seed=DEFAULT_SEED
+            )
+        )
+    except BaseException as exc:
+        conn.send(f"{type(exc).__name__}: {exc}")
+    finally:
+        conn.close()
+
+
+def _run_fresh_match(bot_path: Path, spec: BotSpec, best_of: int) -> SimulationResult:
+    # Spawn also resets helper-module globals and stdlib random state, which
+    # reloading only bot.py does not. This remains a local practice tool; use
+    # the arena engine for per-move time-limit and fallback acceptance checks.
+    ctx = multiprocessing.get_context("spawn")
+    parent, child = ctx.Pipe(duplex=False)
+    process = ctx.Process(
+        target=_local_match_process, args=(child, bot_path, spec, best_of)
+    )
+    process.start()
+    child.close()
+    try:
+        if not parent.poll(12 + best_of * 2):
+            raise ParticipantBotError(
+                f"Practice match against {spec.slug} exceeded its time budget"
+            )
+        try:
+            result = parent.recv()
+        except EOFError as exc:
+            raise ParticipantBotError("Bot process exited during practice") from exc
+        if isinstance(result, str):
+            raise ParticipantBotError(result)
+        return result
+    finally:
+        parent.close()
+        process.join(timeout=1)
+        if process.is_alive():
+            process.kill()
+            process.join()
+        process.close()
 
 
 def _simulate_series(
     participant_move: Callable[[list[Move], list[Move], dict], Move],
-    opponent_bot: "LoadedHouseBot",
+    opponent_bot: LoadedHouseBot,
     *,
     best_of: int,
     seed: int,
@@ -100,7 +149,9 @@ def _simulate_series(
         }
 
         try:
-            my_move = Move.from_value(participant_move(list(my_history), list(opp_history), match_state))
+            my_move = Move.from_value(
+                participant_move(list(my_history), list(opp_history), match_state)
+            )
         except Exception as exc:  # pragma: no cover - defensive
             console.print(
                 f"[red]Exception from bot in round {round_number} vs {opponent_bot.spec.slug}: {exc}"
@@ -108,7 +159,17 @@ def _simulate_series(
             my_move = rng.choice(list(Move))
             errors += 1
 
-        opp_move = opponent_bot.next_move(list(opp_history), list(my_history), match_state)
+        opponent_state = {
+            "round": round_number,
+            "best_of": best_of,
+            "seed": opponent_bot.seed,
+            "opponent_last_outcome": _last_outcome_label(losses, wins),
+            "timeouts": 0,
+            "opponent_timeouts": 0,
+        }
+        opp_move = opponent_bot.next_move(
+            list(opp_history), list(my_history), opponent_state
+        )
 
         my_history.append(my_move)
         opp_history.append(opp_move)

@@ -1,5 +1,34 @@
-"""Shim package exposing the tournament SDK as `import rpsdk`."""
+"""Shared primitives exposed to bots during execution."""
 
-from rps_client.rpsdk import *  # noqa: F401,F403
+from __future__ import annotations
 
-__all__ = [name for name in globals().keys() if not name.startswith("_")]
+from enum import Enum
+
+
+class Move(str, Enum):
+    ROCK = "rock"
+    PAPER = "paper"
+    SCISSORS = "scissors"
+
+    @classmethod
+    def from_value(cls, value: str | Move) -> Move:
+        if isinstance(value, Move):
+            return value
+        normalized = value.lower()
+        try:
+            return Move(normalized)
+        except ValueError as exc:  # pragma: no cover - defensive path
+            raise ValueError(f"Invalid move: {value!r}") from exc
+
+    def beats(self, other: Move) -> bool:
+        return (
+            (self is Move.ROCK and other is Move.SCISSORS)
+            or (self is Move.SCISSORS and other is Move.PAPER)
+            or (self is Move.PAPER and other is Move.ROCK)
+        )
+
+    def to_payload(self) -> str:
+        return self.value
+
+
+ALL_MOVES: tuple[Move, ...] = (Move.ROCK, Move.PAPER, Move.SCISSORS)

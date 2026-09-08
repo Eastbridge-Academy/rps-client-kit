@@ -18,7 +18,7 @@ def test_init_command_creates_starter_bot(tmp_path):
 def test_validate_command_runs_local_check(tmp_path, monkeypatch):
     (tmp_path / "bot.py").write_text(
         """
-from rps_client import rpsdk
+import rpsdk
 
 def next_move(my_history, opponent_history, match_state):
     return rpsdk.Move.ROCK

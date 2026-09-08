@@ -76,7 +76,7 @@ Submit a bot:
 rps-cli submit "Team Name" --email you@example.com
 ```
 
-The CLI sends the shared token as `X-Submit-Token`.
+The CLI sends shared or league signup tokens as `Authorization: Bearer ...`, and includes the installed `rpsdk` with each submission.
 
 Check your latest submission state with:
 
@@ -137,3 +137,15 @@ Release Workflow
 ----------------
 
 Tags like `v0.1.2` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.
+
+## SDK and catalogue source
+
+Version 0.2.0 makes `rpsdk` and `rps_house_bots` the canonical packages used by
+both the arena API/worker and this CLI. Import `Move` from `rpsdk`.
+`rps-cli play` starts fresh processes for each opponent, calls `setup`, and uses
+side-relative state. It is a practice tool; arena acceptance uses the worker's
+per-move limits and fault policy.
+
+The 13 opponents include constants, cycles, reactive rules, uniform/biased random
+baselines, changing bias, transition learning (`markov`), sequence matching
+(`sequence_hunter`), and adaptive prediction (`adaptive_ensemble`).

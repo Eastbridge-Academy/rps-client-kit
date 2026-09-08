@@ -2,14 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from rich.console import Console
 
-from rps_client.participant_bot import ParticipantBotError, build_sample_match_state, load_participant_bot
-from rps_client.rpsdk import Move
+from rps_client.participant_bot import (
+    ParticipantBotError,
+    build_sample_match_state,
+    load_participant_bot,
+)
 from rps_client.simulator import run_local_simulation
+from rpsdk import Move
 
 console = Console()
 
@@ -56,7 +60,10 @@ def validate_local_bot(
 
     opponents = list(smoke_opponents or DEFAULT_SMOKE_OPPONENTS)
     console.print(f"Running smoke matches against: {', '.join(opponents)}")
-    run_local_simulation(opponents, best_of=best_of, bot_path=bot_path)
+    results = run_local_simulation(opponents, best_of=best_of, bot_path=bot_path)
+    if any(result.errors for result in results):
+        console.print("[red]Smoke matches found bot errors. Fix them before submitting.[/red]")
+        raise SystemExit(1)
 
 
 def _format_validation_failure(exc: Exception) -> str:

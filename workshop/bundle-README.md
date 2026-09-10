@@ -7,6 +7,10 @@ event's server URL, league slug and submit token.
 
 ## Raspberry Pi / Linux / macOS
 
+On your own laptop, you can follow the
+[GitHub setup instructions](https://github.com/Eastbridge-Academy/rps-client-kit/blob/v0.3.0/README.md#on-your-own-laptop)
+to install uv, download Python if needed, and install the kit directly.
+
 The lab needs **Python 3.11 or newer and uv installed before the session**.
 Extract this ZIP into your home folder; it creates `rps-event-kit/`. Then:
 

@@ -1,14 +1,67 @@
 # Eastbridge RPS Client Kit
 
-Build a Python rock-paper-scissors bot, practice against a varied house field,
-and submit versions to the Eastbridge Arena. Python 3.11+; Raspberry Pi 5,
-Linux and macOS are supported. The participant workflow mirrors the chess kit:
-initialize a project, test it, play locally, submit, then check validation status.
+Write a Python rock-paper-scissors bot, practice against the house bots, and
+enter it in the Eastbridge Arena. The kit works on Windows, macOS and Linux,
+including Raspberry Pi 5. It requires Python 3.11 or newer; the setup below
+uses Python 3.12.
+
+**[Download v0.3.0](https://github.com/Eastbridge-Academy/rps-client-kit/releases/tag/v0.3.0)**
+for the installable wheel, printable handouts and complete event ZIP.
+
+## On your own laptop
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then open
+a new terminal. uv will download Python 3.12 if you don't already have it.
+The wheel installs directly from GitHub; you don't need Git or a compiler.
+
+**macOS or Linux:**
+
+```bash
+mkdir rps-bot
+cd rps-bot
+uv venv --python 3.12
+uv pip install --python .venv/bin/python https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/eastbridge_rps_client_kit-0.3.0-py3-none-any.whl
+source .venv/bin/activate
+rps-cli init
+rps-cli test
+rps-cli play --against rocky,copycat --best-of 501
+```
+
+**Windows PowerShell:**
+
+```powershell
+mkdir rps-bot
+cd rps-bot
+uv venv --python 3.12
+uv pip install --python .venv\Scripts\python.exe https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/eastbridge_rps_client_kit-0.3.0-py3-none-any.whl
+.\.venv\Scripts\rps-cli.exe init
+.\.venv\Scripts\rps-cli.exe test
+.\.venv\Scripts\rps-cli.exe play --against rocky,copycat --best-of 501
+```
+
+Edit `bot.py` and rerun the tests. In your editor, select this project's `.venv`
+Python interpreter so it can find `rpsdk`. On Windows, use
+`.\.venv\Scripts\rps-cli.exe` wherever the handouts say `rps-cli`; this works
+without changing PowerShell's script execution policy. On macOS and Linux,
+activate `.venv` again whenever you open a new terminal.
+
+If you already use the chess kit as a uv tool, the same installation method
+works here. This option requires Git:
+
+```bash
+uv tool install --python 3.12 git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.3.0
+uv tool update-shell
+```
+
+Open a new terminal, create a bot folder, then run `rps-cli init` there. The
+tool runs tests and bots in its own Python environment. The project setup above
+also makes the SDK available to your editor and to Python scripts in `.venv`.
 
 ## Start at the event
 
-The facilitator supplies `rps-event-kit.zip` with this release's wheel, dependency
-wheels, printable handouts and a setup script. Extract it to `~/rps-event-kit`:
+Download [rps-event-kit.zip](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/rps-event-kit.zip),
+or use the copy supplied by the facilitator. It includes the kit, dependency
+wheels, handouts and an offline setup script. Extract it to `~/rps-event-kit`:
 
 ```bash
 cd ~/rps-event-kit
@@ -50,9 +103,9 @@ rps-cli init
 rps-cli test
 ```
 
-The source repository is https://github.com/Eastbridge-Academy/rps-client-kit.
-Do not use a guessed release tag: an unpushed local release is available through
-its event bundle until the organizer publishes it.
+You can also install the tagged source into a project with
+`uv pip install git+https://github.com/Eastbridge-Academy/rps-client-kit@v0.3.0`.
+This requires Git; the wheel instructions above use the same kit version.
 
 ## Configure and enter the tournament
 
@@ -160,9 +213,18 @@ missing tests and the README, so existing bot folders can adopt the new workflow
 
 ## Releases
 
-The [two-hour workshop](workshop/README.md) includes four printable routes,
-the house-bot field guide, facilitator reference bots, and offline bundle builds.
-Choose a route directly; each repeats the same setup and mechanics foundations.
+Choose a handout for your programming experience. Each includes the same four
+pages of setup, mechanics and strategy fundamentals:
+
+- [Beginner: Find a pattern](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/01-beginner.pdf) (7 pages)
+- [Intermediate: Count the moves](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/02-intermediate.pdf) (8 pages)
+- [Advanced: Markov models](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/03-advanced.pdf) (8 pages)
+- [Expert: Combine several strategies](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/04-expert.pdf) (9 pages)
+- [House-bot field guide](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/05-house-bot-field-guide.pdf) (2 landscape pages)
+- [Facilitator notes](https://github.com/Eastbridge-Academy/rps-client-kit/releases/download/v0.3.0/06-facilitator-notes.pdf) (3 pages)
+
+The [workshop source](workshop/README.md) includes the reference bots and build
+instructions. The event ZIP contains all these PDFs and the reference bots.
 
 For a local development server that uses a private CA, Python may not trust the
 certificate even when the browser does. Set `SSL_CERT_FILE` to the facilitator's

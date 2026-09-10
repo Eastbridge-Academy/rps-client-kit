@@ -17,6 +17,10 @@ jobs:
           python-version: "3.12"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+      - name: Check the release version
+        env:
+          RPS_RELEASE_TAG: ${{ github.ref_name }}
+        run: python -c "import os, pathlib, tomllib; version = tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version']; assert os.environ['RPS_RELEASE_TAG'] == 'v' + version"
       - name: Install the handout typesetter
         run: |
           sudo apt-get update
@@ -28,11 +32,15 @@ jobs:
           uv run pytest
           uv run --group workshop python workshop/build_handouts.py
           uv build
+          uv run python workshop/smoke_install.py
           uv run python workshop/build_bundle.py
           sh workshop/smoke_bundle.sh output/rps-event-kit
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          name: RPS workshop kit ${{ github.ref_name }}
+          body_path: workshop/release-notes-${{ github.ref_name }}.md
+          fail_on_unmatched_files: true
           files: |
             dist/*
             output/pdf/*.pdf

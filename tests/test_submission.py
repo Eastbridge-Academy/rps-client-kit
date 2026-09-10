@@ -61,7 +61,7 @@ def test_submit_bot_archive_success(monkeypatch, tmp_path, capsys):
         assert "bot.py" in names
         assert "helpers.py" in names
         assert "data/info.txt" in names
-        assert zf.read("bot.py").decode() == "import helpers\nprint('hi')\n"
+        assert zf.read("bot.py") == bot_file.read_bytes()
 
     out = capsys.readouterr().out
     assert "queued for validation" in out

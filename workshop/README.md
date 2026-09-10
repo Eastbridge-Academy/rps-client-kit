@@ -26,6 +26,7 @@ uv run pytest
 uv run ruff check
 uv run --group workshop python workshop/build_handouts.py
 uv build
+uv run python workshop/smoke_install.py
 uv run python workshop/build_bundle.py
 ```
 
@@ -59,3 +60,9 @@ Final outputs:
 Keep event URL/league/token distribution separate from source and artifacts.
 The printed defaults are examples. Test the actual server's upload, validation,
 activation and completed-match path before the event.
+
+The public installation guide is in the repository README. CI exercises fresh
+project and uv-tool installations on Windows, macOS and Linux. To check an
+already published wheel or Git tag, pass its URL to workshop/smoke_install.py.
+The script creates temporary environments and leaves existing participant
+projects and installed tools alone.

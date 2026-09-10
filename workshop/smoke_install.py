@@ -1,3 +1,8 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11,<4"
+# dependencies = []
+# ///
 """Exercise project and uv-tool installs on Windows, macOS and Linux.
 
 Run after uv build, or supply a wheel URL / tagged Git URL as the argument.

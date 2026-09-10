@@ -21,13 +21,13 @@ required packages are `texlive-latex-extra texlive-fonts-recommended lmodern`.
 Only the person building the PDFs needs TeX; participants receive finished PDFs.
 
 ```bash
-uv sync --group workshop
+uv sync --locked
 uv run pytest
 uv run ruff check
-uv run --group workshop python workshop/build_handouts.py
+uv run --locked --script workshop/build_handouts.py
 uv build
-uv run python workshop/smoke_install.py
-uv run python workshop/build_bundle.py
+uv run --script workshop/smoke_install.py
+uv run --locked --script workshop/build_bundle.py
 ```
 
 The PDF build requires exactly the planned pages and fails on accidental
@@ -36,6 +36,14 @@ generated TeX, logs and intermediate PDFs remain in output/latex/ for review.
 Use `--only beginner` (or another route, `field-guide`, `facilitator`) to iterate
 on one document. Inline `$...$` and fenced `math` blocks use LaTeX mathematics;
 inline code and Python/shell listings preserve literal quotes and underscores.
+
+The three standalone Python scripts declare their own Python requirements and
+dependencies in PEP 723 headers. `uv run --script` installs those dependencies
+in an isolated environment. The two builders have checked-in script lockfiles
+for reproducible dependency versions. They do not need the project's virtual environment.
+The handout script uses the catalogue from this checkout through a relative
+`tool.uv.sources` entry. You can invoke the scripts by absolute path from another
+directory. TeX and the `uv` executable remain system prerequisites.
 
 Render the PDFs and inspect every page before distributing them;
 page counts alone cannot catch clipping, poor wrapping or unclear hierarchy.

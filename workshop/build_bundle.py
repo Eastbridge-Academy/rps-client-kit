@@ -1,3 +1,8 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11,<4"
+# dependencies = ["httpx==0.28.1", "packaging==26.0"]
+# ///
 """Build a portable offline bundle from the lockfile, wheel and rendered PDFs."""
 from hashlib import sha256
 import json

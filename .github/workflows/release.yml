@@ -27,13 +27,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended lmodern
       - name: Test and build artifacts
         run: |
-          uv sync --locked --python 3.12 --group workshop
+          uv sync --locked --python 3.12
           uv run ruff check
           uv run pytest
-          uv run --group workshop python workshop/build_handouts.py
+          uv run --locked --script workshop/build_handouts.py
           uv build
-          uv run python workshop/smoke_install.py
-          uv run python workshop/build_bundle.py
+          uv run --script workshop/smoke_install.py
+          uv run --locked --script workshop/build_bundle.py
           sh workshop/smoke_bundle.sh output/rps-event-kit
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2

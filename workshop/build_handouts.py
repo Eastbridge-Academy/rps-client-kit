@@ -1,6 +1,13 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11,<4"
+# dependencies = ["pypdf==6.18.0", "eastbridge-rps-client-kit"]
+# [tool.uv.sources]
+# eastbridge-rps-client-kit = { path = ".." }
+# ///
 """Typeset the workshop in the Eastbridge Academy LaTeX house style.
 
-uv run --group workshop python workshop/build_handouts.py
+uv run --locked --script workshop/build_handouts.py
 Requires pdfLaTeX; all branding assets are included in the source checkout.
 """
 from __future__ import annotations

@@ -34,7 +34,7 @@ jobs:
       - name: Build
         run: uv build
       - name: Try a participant install from the wheel
-        run: uv run python workshop/smoke_install.py
+        run: uv run --python '${{ matrix.python-version }}' --script workshop/smoke_install.py
 
   workshop:
     runs-on: ubuntu-latest
@@ -50,10 +50,10 @@ jobs:
           sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended lmodern
       - name: Build printable and offline materials
         run: |
-          uv sync --locked --python 3.11 --group workshop
-          uv run --group workshop python workshop/build_handouts.py
+          uv sync --locked --python 3.11
+          uv run --locked --script workshop/build_handouts.py
           uv build
-          uv run python workshop/build_bundle.py
+          uv run --locked --script workshop/build_bundle.py
       - name: Exercise offline setup and participant commands
         run: sh workshop/smoke_bundle.sh output/rps-event-kit
       - uses: actions/upload-artifact@v4

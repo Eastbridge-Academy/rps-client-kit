@@ -1,94 +1,131 @@
-"""Build the printable event packets from reviewable Markdown sources.
+"""Typeset the workshop in the Eastbridge Academy LaTeX house style.
 
 uv run --group workshop python workshop/build_handouts.py
+Requires pdfLaTeX; all branding assets are included in the source checkout.
 """
-
 from __future__ import annotations
 
-from functools import partial
-from html import escape
+import argparse
 from pathlib import Path
 import re
+import shutil
+import subprocess
 
 from pypdf import PdfReader
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_LEFT
-from reportlab.lib.pagesizes import landscape, letter
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Preformatted, Spacer, Table, TableStyle, PageBreak
-
 from rps_house_bots import list_bots
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT.parent / "output/pdf"
-INK = colors.HexColor("#19343B")
-TEAL = colors.HexColor("#196B64")
-MUTED = colors.HexColor("#526466")
-PALE = colors.HexColor("#EFF5F2")
-GOLD = colors.HexColor("#9B7430")
-STYLES = {
-    "body": ParagraphStyle("body", fontName="Helvetica", fontSize=10.2, leading=14, textColor=INK, spaceAfter=8),
-    "h1": ParagraphStyle("h1", fontName="Helvetica-Bold", fontSize=23, leading=26, textColor=INK, spaceAfter=13, keepWithNext=True),
-    "h2": ParagraphStyle("h2", fontName="Helvetica-Bold", fontSize=12.5, leading=16, textColor=TEAL, spaceBefore=5, spaceAfter=7, keepWithNext=True),
-    "code": ParagraphStyle("code", fontName="Courier", fontSize=8.8, leading=11.7, textColor=INK, backColor=colors.HexColor("#F4F5F4"), borderPadding=7, spaceBefore=3, spaceAfter=11),
-    "cell": ParagraphStyle("cell", fontName="Helvetica", fontSize=9, leading=12, textColor=INK, alignment=TA_LEFT),
-    "small": ParagraphStyle("small", fontName="Helvetica", fontSize=9.2, leading=12.5, textColor=MUTED),
+BUILD = ROOT.parent / "output/latex"
+ROUTES = ("beginner", "intermediate", "advanced", "expert")
+SUBTITLES = {
+    "A bot in the arena": "Getting started",
+    "What your bot sees": "The client-kit contract",
+    "Why there is room to win": "Randomness and prediction",
+    "Test, compare and improve": "A useful experiment",
+    "Route A: find a pattern": "Route A / Beginner",
+    "Route B: estimate and adapt": "Route B / Intermediate",
+    "Route C: learn the dependency": "Route C / Advanced",
+    "Route D: compete with your models": "Route D / Expert",
 }
 
 
+def escape(text: str) -> str:
+    replacements = {"\\": r"\textbackslash{}", "&": r"\&", "%": r"\%", "$": r"\$",
+                    "#": r"\#", "_": r"\_", "{": r"\{", "}": r"\}",
+                    "~": r"\textasciitilde{}", "^": r"\textasciicircum{}"}
+    return "".join(replacements.get(char, char) for char in text)
+
+
 def inline(text: str) -> str:
-    text = escape(text)
-    text = re.sub(r"`([^`]+)`", r'<font name="Courier" size="9">\1</font>', text)
-    return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
-
-
-def paragraph(text: str, style: str = "body") -> Paragraph:
-    return Paragraph(inline(text).replace("\n", "<br/>"), STYLES[style])
-
-
-def table(rows: list[list[str]], width: float, widths: list[float] | None = None) -> Table:
-    cells = [[paragraph(text, "cell") for text in row] for row in rows]
-    if widths is None:
-        if len(rows[0]) == 2:
-            widths = [width * .29, width * .71]
+    # Protect code and math before formatting prose; literal quotes and underscores
+    # in the participant commands must not be interpreted as typographic markup.
+    pieces = re.split(r"(`[^`]+`|\$[^$\n]+\$|\*\*[^*]+\*\*|\*[^*]+\*|https?://[^\s]+)", text)
+    result = []
+    for piece in pieces:
+        if piece.startswith("`") and piece.endswith("`"):
+            result.append(r"\code{" + escape(piece[1:-1]) + "}")
+        elif piece.startswith("$") and piece.endswith("$"):
+            result.append(piece)
+        elif piece.startswith("**") and piece.endswith("**"):
+            result.append(r"\textbf{" + inline(piece[2:-2]) + "}")
+        elif piece.startswith("*") and piece.endswith("*"):
+            result.append(r"\emph{" + escape(piece[1:-1]) + "}")
+        elif piece.startswith(("https://", "http://")):
+            url = piece.rstrip(".,;")
+            result.append(r"\url{" + url + "}" + piece[len(url):])
         else:
-            first = width * .25
-            widths = [first] + [(width - first) / (len(rows[0]) - 1)] * (len(rows[0]) - 1)
-    result = Table(cells, colWidths=widths, repeatRows=1, hAlign="LEFT", spaceBefore=4, spaceAfter=12)
-    result.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), PALE),
-        ("LINEBELOW", (0, 0), (-1, 0), .7, TEAL),
-        ("LINEBELOW", (0, 1), (-1, -1), .3, colors.HexColor("#D9E3DF")),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("LEFTPADDING", (0, 0), (-1, -1), 7),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
-        ("TOPPADDING", (0, 0), (-1, -1), 6),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-    ]))
-    return result
+            # Smart quotation marks in prose only; listings keep straight quotes.
+            prose = escape(piece)
+            prose = re.sub(r'"([^"\n]+)"', lambda match: r"\enquote{" + match[1] + "}", prose)
+            result.append(prose)
+    return "".join(result)
 
 
-def parse_page(source: str, width: float) -> list:
+def make_table(rows: list[list[str]]) -> str:
+    columns = len(rows[0])
+    worksheet = any(all(not row[column] for row in rows[1:])
+                    for column in range(1, columns))
+    if columns == 2:
+        spec = r"@{}L{.28\linewidth}Y@{}"
+    elif worksheet:
+        spec = r"@{}L{.25\linewidth}" + "Y" * (columns - 1) + "@{}"
+    else:
+        spec = "@{}" + "Y" * columns + "@{}"
+    lines = [r"\par\smallskip\begingroup\small", r"\setlength{\tabcolsep}{5pt}",
+             r"\renewcommand{\arraystretch}{1.17}", r"\begin{tabularx}{\linewidth}{" + spec + "}", r"\toprule"]
+    for index, row in enumerate(rows):
+        cells = [inline(cell) for cell in row]
+        if index == 0:
+            cells = [r"\textbf{" + cell + "}" for cell in cells]
+        if worksheet and index > 0:
+            cells[0] = r"\rule{0pt}{22pt}" + cells[0]
+        lines.append(" & ".join(cells) + r" \\")
+        if index == 0:
+            lines.append(r"\midrule")
+    lines += [r"\bottomrule", r"\end{tabularx}\endgroup\par\smallskip"]
+    return "\n".join(lines)
+
+
+def parse_page(source: str) -> str:
     lines = source.strip().splitlines()
     result = []
     index = 0
+    first_paragraph = True
     while index < len(lines):
         line = lines[index]
         if not line.strip():
             index += 1
             continue
         if line.startswith("```"):
+            language = line[3:]
             code = []
             index += 1
             while index < len(lines) and not lines[index].startswith("```"):
                 code.append(lines[index])
                 index += 1
-            result.append(Preformatted("\n".join(code), STYLES["code"], maxLineLength=91))
+            if index == len(lines):
+                raise ValueError("Unclosed fenced block")
+            if language == "math":
+                result.append("\\[\n" + "\n".join(code) + "\n\\]")
+            else:
+                style = {"python": "python", "bash": "shell", "text": "plaincode"}[language]
+                options = f"style={style}" + (",numbers=none" if len(code) <= 2 else "")
+                result.append(r"\begin{lstlisting}[" + options + "]\n" + "\n".join(code) + "\n" + r"\end{lstlisting}")
         elif line.startswith("# "):
-            result.append(paragraph(line[2:], "h1"))
+            title = line[2:]
+            if title in SUBTITLES:
+                display = title.split(": ", 1)[-1].capitalize() if title.startswith("Route ") else title
+                result.append(r"\workshoptitle{" + inline(display) + "}{" + inline(SUBTITLES[title]) + "}")
+            else:
+                result.append(r"\section*{" + inline(title) + "}")
         elif line.startswith("## "):
-            result.append(paragraph(line[3:], "h2"))
+            heading = line[3:]
+            step = re.match(r"((?:Step|Experiment) \d+): (.+)", heading)
+            if step:
+                result.append(r"\lessonstep{" + inline(step[1]) + "}{" + inline(step[2]) + "}")
+            else:
+                result.append(r"\subsection*{" + inline(heading) + "}")
         elif line.startswith("| "):
             rows = []
             while index < len(lines) and lines[index].startswith("|"):
@@ -96,98 +133,112 @@ def parse_page(source: str, width: float) -> list:
                 if not all(re.fullmatch(r":?-+:?", value) for value in row):
                     rows.append(row)
                 index += 1
-            result.append(table(rows, width))
+            result.append(make_table(rows))
             continue
         elif line.startswith("> "):
-            box = Table([[paragraph(line[2:])]], colWidths=[width], spaceBefore=3, spaceAfter=11)
-            box.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), PALE),
-                                    ("LINEBEFORE", (0, 0), (0, -1), 2, TEAL),
-                                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                                    ("TOPPADDING", (0, 0), (-1, -1), 8),
-                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 2)]))
-            result.append(box)
+            text = line[2:]
+            kind = "summit" if text.startswith(("**Challenge:", "**Paper challenge:")) else "checkpoint"
+            result.append(r"\begin{" + kind + "}\n" + inline(text) + "\n" + r"\end{" + kind + "}")
         elif line.startswith("- "):
-            result.append(paragraph("- " + line[2:]))
+            items = []
+            while index < len(lines) and lines[index].startswith("- "):
+                items.append(r"\item " + inline(lines[index][2:]))
+                index += 1
+            result.append("\\begin{itemize}\n" + "\n".join(items) + "\n\\end{itemize}")
+            continue
         else:
             prose = [line]
             while index + 1 < len(lines) and lines[index + 1].strip() and not lines[index + 1].startswith(("#", "|", "```", "> ", "- ")):
                 index += 1
                 prose.append(lines[index])
-            result.append(paragraph(" ".join(prose)))
+            body = inline(" ".join(prose)) + "\n\\par"
+            if first_paragraph:
+                body = "\\begin{context}\n" + body + "\n\\end{context}"
+                first_paragraph = False
+            result.append(body)
         index += 1
-    return result
+    return "\n\n".join(result)
 
 
-def furniture(canvas: Canvas, doc, label: str) -> None:
-    width, height = doc.pagesize
-    canvas.saveState()
-    canvas.setFillColor(TEAL)
-    canvas.setFont("Helvetica-Bold", 9)
-    canvas.drawString(doc.leftMargin, height - 31, "EASTBRIDGE  /  ARENA")
-    canvas.setFillColor(MUTED)
-    canvas.setFont("Helvetica", 8)
-    canvas.drawRightString(width - doc.rightMargin, height - 31, label)
-    canvas.setStrokeColor(colors.HexColor("#D9E3DF"))
-    canvas.setLineWidth(.4)
-    canvas.line(doc.leftMargin, 32, width - doc.rightMargin, 32)
-    canvas.setFont("Helvetica", 7.5)
-    canvas.drawString(doc.leftMargin, 21, "RPS LAB  |  CLIENT KIT 0.3.0")
-    canvas.drawRightString(width - doc.rightMargin, 21, str(doc.page))
-    canvas.restoreState()
+def compile_pdf(stem: str, label: str, body: str, expected_pages: int, *, landscape: bool = False) -> None:
+    folder = BUILD / stem
+    folder.mkdir(parents=True, exist_ok=True)
+    for asset in (ROOT / "latex").iterdir():
+        shutil.copy2(asset, folder / asset.name)
+    options = "11pt,landscape" if landscape else "11pt"
+    preamble = (r"\documentclass[" + options + "]{article}\n"
+                + r"\newcommand{\routelabel}{" + escape(label) + "}\n"
+                + "\\usepackage{eastbridge-handout}\n"
+                + ("\\geometry{landscape,left=.75in,right=.75in,top=1in,bottom=.75in}\n"
+                   "\\setlength{\\headwidth}{\\textwidth}\n" if landscape else "")
+                + r"\hypersetup{pdftitle={RPS Workshop: " + escape(label) + "}}\n"
+                + "\\begin{document}\n\\thispagestyle{plain}\n")
+    tex = folder / f"{stem}.tex"
+    tex.write_text(preamble + body + "\n\\end{document}\n")
+    for _ in range(2):
+        result = subprocess.run(["pdflatex", "-no-shell-escape", "-halt-on-error", "-interaction=nonstopmode", tex.name],
+                                cwd=folder, capture_output=True, text=True, timeout=60)
+        if result.returncode:
+            raise RuntimeError(f"pdfLaTeX failed for {stem}:\n{result.stdout[-3500:]}")
+    log = (folder / f"{stem}.log").read_text()
+    warnings = re.findall(r"(?:Overfull|Underfull) \\[hv]box[^\n]*", log)
+    pdf = folder / f"{stem}.pdf"
+    count = len(PdfReader(pdf).pages)
+    problems = [warning for warning in warnings if warning.startswith("Overfull")]
+    problems += re.findall(r"Missing character:[^\n]*", log)
+    if count != expected_pages:
+        problems.append(f"Expected {expected_pages} planned pages; rendered {count}")
+    if problems:
+        raise RuntimeError(f"Layout check failed for {stem}:\n" + "\n".join(problems)
+                           + f"\nInspect {pdf} and {tex.with_suffix('.log')}")
+    shutil.copy2(pdf, OUTPUT / pdf.name)
+    print(f"{stem}: {count} pages (target {expected_pages}); {len(warnings)} box warnings")
+    for warning in warnings:
+        print("  " + warning)
 
 
-def build(filename: str, label: str, pages: list[str]) -> None:
-    path = OUTPUT / filename
-    doc = SimpleDocTemplate(str(path), pagesize=letter, leftMargin=46, rightMargin=46,
-                            topMargin=56, bottomMargin=45, title=label, author="Eastbridge Academy")
-    flow = []
-    for index, page in enumerate(pages):
-        if index:
-            flow.append(PageBreak())
-        flow.extend(parse_page(page, doc.width))
-    decorate = partial(furniture, label=label)
-    doc.build(flow, onFirstPage=decorate, onLaterPages=decorate, canvasmaker=partial(Canvas, invariant=1))
-    count = len(PdfReader(path).pages)
-    print(f"{path.name}: {count} pages (planned {len(pages)})")
-    if count != len(pages):
-        raise RuntimeError(f"Unexpected overflow in {path.name}: review the source page lengths.")
+def packet(route: str, number: int) -> None:
+    common = (ROOT / "common.md").read_text().split("---page---")
+    pages = common + (ROOT / f"{route}.md").read_text().split("---page---")
+    compile_pdf(f"0{number}-{route}", route.title(), "\n\\clearpage\n".join(parse_page(page) for page in pages), len(pages))
 
 
 def field_guide() -> None:
-    path = OUTPUT / "05-house-bot-field-guide.pdf"
-    doc = SimpleDocTemplate(str(path), pagesize=landscape(letter), leftMargin=42, rightMargin=42,
-                            topMargin=52, bottomMargin=43, title="House bot field guide", author="Eastbridge Academy")
     order = {"Beginner": 0, "Intermediate": 1, "Advanced": 2, "Expert": 3, "Baseline": 4}
     bots = sorted(list_bots(), key=lambda bot: (order[bot.level], bot.slug))
-    flow = []
+    pages = []
     for page in range(2):
-        if page:
-            flow.append(PageBreak())
-        flow.append(paragraph(f"Meet the house bots  /  {page + 1}", "h1"))
-        flow.append(paragraph("Rules and hints are open. Route labels suggest a teaching path, not a universal strength ranking.", "small"))
-        flow.append(Spacer(1, 9))
-        rows = [["**Bot / route**", "**What it does**", "**An experiment to try**"]]
+        lines = [r"\workshoptitle{Meet the house bots}{" + ("Patterns and personalities" if page == 0 else "Memory, adaptation and a baseline") + "}",
+                 r"{\small Rules and hints are open. Route labels suggest a teaching path, not a universal strength ranking.\par}",
+                 r"\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}",
+                 r"\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}",
+                 r"\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule"]
         for bot in bots[page * 8:(page + 1) * 8]:
-            rows.append([f"**{bot.display_name}**\n`{bot.slug}`\n{bot.level}", bot.description, bot.hint])
-        grid = table(rows, doc.width, [128, 226, doc.width - 354])
-        flow.append(grid)
-    decorate = partial(furniture, label="HOUSE FIELD  /  PRINT BOTH SIDES")
-    doc.build(flow, onFirstPage=decorate, onLaterPages=decorate, canvasmaker=partial(Canvas, invariant=1))
-    count = len(PdfReader(path).pages)
-    print(f"{path.name}: {count} pages")
-    if count != 2:
-        raise RuntimeError("Field guide overflowed its two-page format.")
+            name = "Cycle RPS" if bot.slug == "cycle_rps" else bot.display_name
+            card = r"\textbf{" + escape(name) + r"}\newline{\scriptsize\texttt{" + escape(bot.slug) + r"}}\newline{\footnotesize\color{myblue}" + escape(bot.level) + "}"
+            lines.append(card + " & " + inline(bot.description) + " & " + inline(bot.hint) + r" \\[4pt]")
+            if bot != bots[page * 8:(page + 1) * 8][-1]:
+                lines.append(r"\addlinespace[3pt]")
+        lines += [r"\bottomrule\end{tabularx}\endgroup"]
+        pages.append("\n".join(lines))
+    compile_pdf("05-house-bot-field-guide", "House bot field guide", "\n\\clearpage\n".join(pages), 2, landscape=True)
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--only", choices=(*ROUTES, "field-guide", "facilitator"))
+    args = parser.parse_args()
+    if not shutil.which("pdflatex"):
+        raise SystemExit("pdfLaTeX is required. See workshop/README.md for TeX Live installation.")
     OUTPUT.mkdir(parents=True, exist_ok=True)
-    common = (ROOT / "common.md").read_text().split("---page---")
-    for number, route in enumerate(("beginner", "intermediate", "advanced", "expert"), 1):
-        pages = common + (ROOT / f"{route}.md").read_text().split("---page---")
-        build(f"0{number}-{route}.pdf", f"RPS WORKSHOP  /  {route.upper()}", pages)
-    build("06-facilitator-notes.pdf", "RPS WORKSHOP  /  FACILITATOR", (ROOT / "facilitator.md").read_text().split("---page---"))
-    field_guide()
+    for number, route in enumerate(ROUTES, 1):
+        if args.only in (None, route):
+            packet(route, number)
+    if args.only in (None, "field-guide"):
+        field_guide()
+    if args.only in (None, "facilitator"):
+        pages = (ROOT / "facilitator.md").read_text().split("---page---")
+        compile_pdf("06-facilitator-notes", "Facilitator notes", "\n\\clearpage\n".join(parse_page(page) for page in pages), len(pages))
 
 
 if __name__ == "__main__":

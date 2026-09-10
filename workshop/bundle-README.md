@@ -48,14 +48,14 @@ lab path is Linux. See the verification report for platforms actually exercised.
 ## Choose your route
 
 Print **one** PDF from handouts/01 through 04. Each already includes the same
-three-page foundations; you do not need to print common pages separately.
+four-page foundations; you do not need to print common pages separately.
 
 | Packet | Suggested starting point | Main investigation |
 | --- | --- | --- |
-| 01 Beginner, 6 pages | New to Python or ready for concrete patterns | Constants, cycles, mimics, evidence checks |
-| 02 Intermediate, 7 pages | Comfortable with lists, dictionaries and functions | Payoff estimates, windows, conditional behavior |
-| 03 Advanced, 7 pages | Ready to build and test a statistical model | Markov context, order two, backoff, honest evaluation |
-| 04 Expert, 8 pages | Experienced with probability and algorithms | Expert weighting, regret assumptions, terminal utility |
+| 01 Beginner, 7 pages | New to Python or ready for concrete patterns | Constants, cycles, mimics, evidence checks |
+| 02 Intermediate, 8 pages | Comfortable with lists, dictionaries and functions | Payoff estimates, windows, conditional behavior |
+| 03 Advanced, 8 pages | Ready to build and test a statistical model | Markov context, order two, backoff, honest evaluation |
+| 04 Expert, 9 pages | Experienced with probability and algorithms | Expert weighting, regret assumptions, terminal utility |
 | 05 House field guide, 2 landscape pages | Any route; hints optional | All 16 personalities and experiments |
 
 Facilitator notes and complete reference bots are in facilitator/. They can be

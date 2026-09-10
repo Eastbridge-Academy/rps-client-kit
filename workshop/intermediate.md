@@ -1,6 +1,6 @@
 # Route B: estimate and adapt
 
-A biased opponent does not need to repeat a fixed pattern. If it plays rock 60% of the time, paper 25% and scissors 15%, paper has expected net payoff `0.60 - 0.15 = +0.45` per throw. A noisy observation can still be useful.
+A biased opponent does not need to repeat a fixed pattern. If it plays rock 60% of the time, paper 25% and scissors 15%, paper has expected net payoff $0.60-0.15=+0.45$ per throw. A noisy observation can still be useful.
 
 ## Step 1: count what you have seen
 
@@ -19,7 +19,7 @@ values = {
 
 The numbers are estimated wins minus losses, up to a common factor. Dividing each by the number of observations would give estimated net payoff per throw, but would not change which is largest. When several moves tie, choose randomly among the tied moves.
 
-Do not automatically counter the most frequent move. If the distribution is **40% rock, 21% paper, 39% scissors**, paper's expected payoff is only +0.01, while rock's is +0.18. Rock exploits the abundant scissors without losing often to paper.
+Do not automatically counter the most frequent move. If the distribution is **40% rock, 21% paper, 39% scissors**, paper's expected payoff is only $+0.01$, while rock's is $+0.18$. Rock exploits the abundant scissors without losing often to paper.
 
 > **Paper check:** calculate all three expected payoffs for that distribution using the shared payoff table. Then explain why prediction accuracy and playing strength are different objectives.
 
@@ -81,7 +81,7 @@ The final block may contain only one throw in a 501-throw match. Do not compare 
 ---page---
 # Condition on something useful
 
-Sticky is balanced in the long run, yet it repeats its previous move with probability 0.8. The other two moves each have probability 0.1. If its last move was rock, paper has expected net payoff `0.8 - 0.1 = +0.7` on the next throw.
+Sticky is balanced in the long run, yet it repeats its previous move with probability 0.8. The other two moves each have probability 0.1. If its last move was rock, paper has expected net payoff $0.8-0.1=+0.7$ on the next throw.
 
 ## Step 5: separate total counts from conditional counts
 

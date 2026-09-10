@@ -64,7 +64,7 @@ Try order one and order two against the same seeds of Double Take. Inspect the e
 
 ## Step 4: control the cost of a larger model
 
-An order-k model has up to `3**k` contexts before considering your own moves. With 501 throws, long contexts are often seen once or not at all. A model can memorize its observations without predicting well.
+An order-$k$ model has up to $3^k$ contexts before considering your own moves. With 501 throws, long contexts are often seen once or not at all. A model can memorize its observations without predicting well.
 
 Use a backoff ladder: a supported order-two row, otherwise order one, otherwise overall counts, otherwise uniform. Try requiring two or three observations in a context before trusting it. Compare the delayed learning against reduced confidence in accidental patterns.
 

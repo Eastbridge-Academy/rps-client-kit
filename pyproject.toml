@@ -30,7 +30,6 @@ dev = [
 workshop = [
     "pymupdf>=1.24",
     "pypdf>=5",
-    "reportlab>=4.2",
 ]
 
 [build-system]

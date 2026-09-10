@@ -36,7 +36,6 @@ Use the event's actual league slug if it differs from `rps`. Settings belong to 
 
 > **First checkpoint:** your tests pass, your project knows the correct event, and you can distinguish an uploaded version from an active one. If setup stalls, ask for help now; your time is better spent building a strategy.
 
-**A two-hour rhythm:** spend the first 20 minutes getting a bot running and understanding the rules. Use about 70 minutes for the route you chose, 20 minutes to test on fresh seeds, and the last 10 to submit and compare notes. Skip optional challenges freely.
 ---page---
 # What your bot sees
 
@@ -78,8 +77,6 @@ You won both of those throws. The next opposing move is still hidden. `opponent_
 
 Learned state and histories reset between matches. If you keep counters in module globals, reset them in setup. Do not seed your generator on every throw; seed it once, then keep drawing from it.
 
-Keep each call quick. Use the standard library and `rpsdk`; your whole virtual environment is not uploaded. Imported local helper modules/packages and files in `data/` are bundled. Open data relative to `Path(__file__).parent`. Avoid network calls, sleeps and large training jobs inside your bot.
-
 > **Check your understanding:** if you want to predict Copycat, which history belongs in the prediction? Its rule is to copy **your** preceding move. The two history arguments are not interchangeable.
 ---page---
 # Why there is room to win
@@ -104,6 +101,11 @@ A bot that plays `rock, paper, scissors` repeatedly has perfectly balanced total
 
 The kit uses seeded pseudorandom generators so experiments can be repeated. Treat seeds as experiment controls, not as a way to reverse-engineer another bot's random stream. The mathematical baseline assumes the current random choice is independent and unavailable to the opponent.
 
+---page---
+# Test, compare and improve
+
+A useful experiment makes one change, holds the conditions steady, and asks whether the result survives a fresh set of matches. Keep a working bot in the arena while you investigate.
+
 ## Count the right thing
 
 A **throw** is one simultaneous choice. A **match** is a fixed series, normally 501 throws. A **league round** schedules each pair of bots. Despite the historical name `best_of`, the arena plays the full series; it does not stop at 251 wins. Drawn throws still count, and a 501-throw match can finish level.
@@ -115,3 +117,11 @@ rps-cli play --against random_uniform --games 5 --seed 100
 ```
 
 > **Before trusting an improvement:** run several fresh seeds, keep the series length fixed, inspect errors, and compare more than one opponent. One lucky match against random play is not evidence of an exploit. Reserve seeds you did not use while tuning.
+
+## Keep the bot light
+
+Keep each call quick. Use the standard library and `rpsdk`; your whole virtual environment is not uploaded. Imported local helper modules/packages and files in `data/` are bundled. Open data relative to `Path(__file__).parent`. Avoid network calls, sleeps and large training jobs inside your bot.
+
+## Make time for the whole experiment
+
+**A two-hour rhythm:** spend the first 20 minutes getting a bot running and understanding the rules. Use about 70 minutes for the route you chose, 20 minutes to test on fresh seeds, and the last 10 to submit and compare notes. Skip optional challenges freely.

@@ -23,9 +23,19 @@ not mean a public release or production deployment has happened.
   versus deterministic second-order structure, exact payoff arithmetic and the
   finite-horizon objective. All five reference bots complete 501-throw series
   against all 16 house personalities, twice with reset state.
-- All **33 PDF pages** were rendered and visually reviewed: beginner 6 pages,
-  intermediate 7, advanced 7, expert 8, house guide 2, facilitator notes 3.
-  Page counts, text bounds and missing-glyph checks pass.
+- All **37 PDF pages** were rendered and visually reviewed after the Eastbridge
+  house-style pass: beginner 7 pages, intermediate 8, advanced 8, expert 9,
+  house guide 2, facilitator notes 3. Each route includes the same four-page
+  foundation. Page counts, print bounds and missing-glyph checks pass; all six
+  pdfLaTeX builds have zero overfull or underfull box warnings.
+- The typesetter uses the original Academy vector logo, Computer Modern text
+  and mathematics, the chess handouts' Solarized palette, framed checkpoints,
+  highlighted code and booktabs tables. The 11-point body stays readable while
+  deliberate page breaks keep the exercises together. Display equations and
+  literal Python/shell quotes were checked in the rendered pages.
+- The source archive includes the LaTeX preamble and logo; it can be built
+  without the courses checkout. The participant wheel excludes the typesetter,
+  and the offline bundle includes finished PDFs. ReportLab is no longer needed.
 - Both GitHub workflow files parse as YAML and both shell scripts pass syntax
   checks. CI now covers Python 3.11, 3.12 and 3.13 and builds review artifacts;
   hosted CI itself has not run because these commits have not been pushed.

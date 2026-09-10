@@ -71,9 +71,9 @@ Adapt the prediction line to this opponent. You need `my_history`, not `opponent
 
 | Completed throw | You played | Copycat played | What will Copycat play next? |
 | --- | --- | --- | --- |
-| 1 | Rock | Scissors | Write your prediction. |
-| 2 | Paper | Rock | Write your prediction. |
-| 3 | Scissors | Paper | Write your prediction. |
+| 1 | Rock | Scissors |  |
+| 2 | Paper | Rock |  |
+| 3 | Scissors | Paper |  |
 
 **Try Echo Two:** this bot copies your move from **two throws ago**. Work out which index you need and how many completed throws you must have before using it. The first two moves are uncertain; judge the strategy after those openings.
 
@@ -91,11 +91,11 @@ Suppose you want to recognize the cycle. After eight completed throws, check whe
 opponent_history[i] == COUNTER[opponent_history[i - 1]]
 ```
 
-Try this for several adjacent pairs, not just one. A random bot can match a short pattern by accident. If the checks agree, predict the continuation. Otherwise use the random baseline until you have better evidence.
+Check several adjacent pairs: a random bot can match a short pattern by accident. If the checks agree, predict the continuation. Otherwise keep the random baseline.
 
 To recognize Copycat, compare `opponent_history[i]` with `my_history[i - 1]` for completed throws after the opening. Be careful: using the same index on both sides tests a different rule. For Echo Two, the gap is two.
 
-You can begin with one detector. Add another only after the first is working. If two hypotheses fit the same short history, keep gathering evidence instead of assuming you have identified the opponent perfectly.
+Start with one working detector. If two hypotheses fit the same short history, gather more evidence before choosing between them.
 
 ## Step 6: run a small comparison
 
@@ -105,7 +105,7 @@ rps-cli play --against random_uniform --games 5 --seed 900
 rps-cli validate
 ```
 
-Keep a small notebook. Give each version a description, such as "paper only" or "cycle detector with eight observations". Record the opponent, seed, throw W-L-D and errors. Change one rule at a time so you can tell which change helped.
+Describe each version in a notebook: "paper only" or "cycle detector with eight observations". Record the opponent, seed, throw W-L-D and errors. Change one rule at a time.
 
 | Version | Opponent and seed | Throws W-L-D | What did you learn? |
 | --- | --- | --- | --- |
@@ -119,4 +119,4 @@ When a bot fails, distinguish a **Python error** from a **wrong prediction**. Te
 
 Submit under your existing team name and check `status`. Open your match history on the dashboard. Find a place where your prediction was right, and a place where it was wrong. Tell a partner which evidence your bot uses and one opponent you expect to trouble it.
 
-**Optional next step:** the intermediate route replaces exact-pattern checks with counts. It is useful when a bot is biased without repeating perfectly. You already have the hardest habit: separating the opponent's behavior, your prediction and your reply.
+**Next route:** use counts to detect biases that do not repeat perfectly. Keep separating the opponent's behavior, your prediction and your reply.

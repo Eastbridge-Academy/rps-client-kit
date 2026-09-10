@@ -6,17 +6,17 @@ Treat the match as a short online decision problem. You have a catalogue of plau
 
 Build a small set of policies that each return an **action distribution** over rock, paper and scissors. Include uniform play, a frequency response, a short-window response, order-one and order-two responses, and one or two reactive models. A deterministic recommendation is a one-hot distribution.
 
-Before throw t, expert i proposes `p_i,t`. Give it weight `w_i,t`, normalize the weights, and sample your actual move from their weighted mixture. Store every proposed distribution before the opposing move is revealed.
+Before throw $t$, expert $i$ proposes $p_{i,t}$. Give it weight $w_{i,t}$, normalize the weights, and sample your actual move from their weighted mixture. Store every proposed distribution before the opposing move is revealed.
 
-After observing opposing move b, you can compute the one-step virtual gain of **every** proposal:
+After observing opposing move $b_t$, you can compute the one-step virtual gain of **every** proposal. Sum over the three possible actions $a$:
 
-```text
-g_i,t = sum over actions a of p_i,t(a) * payoff(a, b)
+```math
+g_{i,t} = \sum_a p_{i,t}(a)\,\operatorname{payoff}(a,b_t).
 ```
 
 This is full-information feedback for the current realized opposing move; you are not limited to the payoff of the move you happened to sample. Score the stored proposals, then update their models for the next throw.
 
-An exponential update is `w_i,t+1 = w_i,t * exp(eta * g_i,t)`. Start with equal positive weights. Use log weights and subtract the maximum before exponentiating to keep normalization stable. Every gain lies in [-1, 1].
+An exponential update is $w_{i,t+1}=w_{i,t}\exp(\eta g_{i,t})$. Start with equal positive weights. Use log weights and subtract the maximum before exponentiating to keep normalization stable. Every gain lies in $[-1,1]$.
 
 > **Implementation check:** with only three fixed-action experts and one uniform expert, feed a written opposing sequence through the update. Compute one update by hand and verify that all weights remain finite, nonnegative and normalized after conversion to probabilities.
 
@@ -26,20 +26,21 @@ The code needs only the standard library. Keep the pool small and the state expl
 ---page---
 # State the guarantee you mean
 
-For the undiscounted exponential update above, with K experts and gains in [-1,1], the usual potential argument gives a pathwise bound against the experts' gains on the **realized history**:
+For the undiscounted exponential update above, with $K$ experts and gains in $[-1,1]$, the usual potential argument gives a pathwise bound against the experts' gains on the **realized history**:
 
-```text
-max_i sum_t g_i,t - sum_t sum_i alpha_i,t * g_i,t
-    <= log(K) / eta + eta * T / 2
+```math
+\max_i\sum_{t=1}^{T}g_{i,t}
+  - \sum_{t=1}^{T}\sum_{i=1}^{K}\alpha_{i,t}\,g_{i,t}
+\;\leq\; \frac{\log K}{\eta}+\frac{\eta T}{2}.
 ```
 
-Here alpha is the normalized weight. With `eta = sqrt(2*log(K)/T)`, the right side is `sqrt(2*T*log(K))`. The mixture's conditional expected gain equals the weighted virtual gain when the opponent cannot see your current random draw. Actual sampled gains still fluctuate.
+Here $\alpha_{i,t}$ is the normalized weight. With $\eta=\sqrt{2\log K\,/\,T}$, the right side is $\sqrt{2T\log K}$. The mixture's conditional expected gain equals the weighted virtual gain when the opponent cannot see your current random draw. Actual sampled gains still fluctuate.
 
 ## Experiment 2: what uniform contributes
 
-A uniform expert has virtual gain exactly zero against every revealed opposing move. Including it makes the bound a useful comparison with the equilibrium baseline. For K=8 and T=501, the bound divided by T is about 0.091. This is a finite-horizon expectation statement for the sampled policy, not a promise of a nonnegative score in every match.
+A uniform expert has virtual gain exactly zero against every revealed opposing move. Including it makes the bound a useful comparison with the equilibrium baseline. For $K=8$ and $T=501$, the bound divided by $T$ is about $0.091$. This is a finite-horizon expectation statement for the sampled policy, not a promise of a nonnegative score in every match.
 
-Derive the displayed bound yourself by comparing the final log sum of weights with the weight of one expert, and bounding each log moment-generating function for a variable in [-1,1]. Be explicit about where the range of the gain enters the constant.
+Derive the displayed bound yourself by comparing the final log sum of weights with the weight of one expert, and bounding each log moment-generating function for a variable in $[-1,1]$. Be explicit about where the range of the gain enters the constant.
 
 ## The counterfactual trap
 
@@ -53,19 +54,19 @@ This distinction matters against Cycle Counter, Markov and Adaptive Ensemble. Re
 ---page---
 # Spend an exploitation budget
 
-Suppose you want an explicit bound on how far a prediction-driven policy can move from the uniform baseline. Let u be uniform and r be any learned action distribution. Play:
+Suppose you want an explicit bound on how far a prediction-driven policy can move from the uniform baseline. Let $u$ be uniform and $r$ be any learned action distribution. Play:
 
-```text
-p = (1 - rho) * u + rho * r,       0 <= rho <= 1
+```math
+p=(1-\rho)u+\rho r, \qquad 0\leq\rho\leq1.
 ```
 
-For a non-anticipating opponent, uniform contributes zero conditional expected payoff and r contributes at least -1. Therefore p's conditional expected payoff is at least `-rho` on each throw. This bound is deliberately crude, but its assumptions and meaning are clear.
+For a non-anticipating opponent, uniform contributes zero conditional expected payoff and $r$ contributes at least $-1$. Therefore $p$'s conditional expected payoff is at least $-\rho$ on each throw. This bound is deliberately crude, but its assumptions and meaning are clear.
 
 ## Experiment 3: pay for confidence
 
-Compare rho values 0, 0.25, 0.5 and 1 while holding the learned policy fixed. Against a genuinely predictable bot, a small rho gives up some available advantage. Against a model that is confidently wrong, it limits the expected loss relative to an unrestricted deterministic reply.
+Compare $\rho$ values $0$, $0.25$, $0.5$ and $1$ while holding the learned policy fixed. Against a predictable bot, a small $\rho$ gives up some available advantage. Against a model that is confidently wrong, it limits the expected loss relative to an unrestricted deterministic reply.
 
-A confidence-triggered rho is a further experiment. You might use the sample count in the current context or a validation score from stored predictions. Neither turns a correlated, adapting opponent into independent data. Avoid advertising a confidence bound whose sampling assumptions the match violates.
+A confidence-triggered $\rho$ is a further experiment. You might use the sample count in the current context or a validation score from stored predictions. Neither turns a correlated, adapting opponent into independent data. Avoid advertising a confidence bound whose sampling assumptions the match violates.
 
 | Variant | Stationary bias | Changing bias | Adaptive learner | Uniform |
 | --- | --- | --- | --- | --- |
@@ -82,38 +83,44 @@ The tournament rewards winning fixed series against a mixed field. A low-regret 
 ---page---
 # Optimize the series, not just the mean
 
-Suppose you know a stationary opposing distribution q. With one throw left and a one-point lead, you may prefer a reply that avoids losing to one with a larger expected net payoff but a larger loss probability. With a deficit, the preference can reverse.
+Suppose you know a stationary opposing distribution $q$. With one throw left and a one-point lead, you may prefer a reply that avoids losing to one with a larger expected net payoff but a larger loss probability. With a deficit, the preference can reverse.
 
 ## Experiment 4: a finite-horizon controller
 
-Let `V(n,d)` be the best expected match points with n throws remaining and current score difference d. At the end:
+Let $V(n,d)$ be the best expected match points with $n$ throws remaining and current score difference $d$. At the end:
 
-```text
-V(0,d) = 1 if d > 0;  0.5 if d == 0;  0 if d < 0
+```math
+V(0,d)=\begin{cases}
+1 & d>0,\\
+\tfrac12 & d=0,\\
+0 & d<0.
+\end{cases}
 ```
 
-For a candidate move a, q determines probabilities W(a), D(a) and L(a) of a throw win, draw and loss. The backward recursion is:
+For a candidate move $a$, $q$ determines probabilities $W(a)$, $D(a)$ and $L(a)$ of a throw win, draw and loss. The backward recursion is:
 
-```text
-V(n,d) = max_a [ W(a)*V(n-1,d+1)
-              + D(a)*V(n-1,d)
-              + L(a)*V(n-1,d-1) ]
+```math
+\begin{aligned}
+V(n,d)=\max_a\bigl[\,&W(a)\,V(n-1,d+1)\\
+                  &+D(a)\,V(n-1,d)\\
+                  &+L(a)\,V(n-1,d-1)\,\bigr].
+\end{aligned}
 ```
 
-For a fixed known q, the maximum of this linear expression occurs at a pure action, except for ties. Mixed actions can still be useful once uncertainty and an adaptive opponent are part of the problem; those are additional assumptions, not features already represented by this recursion.
+For a fixed known $q$, the maximum of this linear expression occurs at a pure action, except for ties. Mixed actions can still be useful once uncertainty and an adaptive opponent are part of the problem; those are additional assumptions, not features already represented by this recursion.
 
-Start with only the final **30 throws**. Precompute a small table or memoize the state; do not recompute a full 501-throw dynamic program on every move. From histories, d is your number of wins minus losses, and the number of throws remaining includes the choice you are about to make.
+Start with only the final **30 throws**. Precompute a small table or memoize the state; do not recompute a full 501-throw dynamic program on every move. From histories, $d$ is your number of wins minus losses, and the number of throws remaining includes the choice you are about to make.
 
 ## A hand-checkable example
 
-Take q = 30% rock, 60% paper, 10% scissors. The net-payoff maximizer is scissors (+0.30); paper earns +0.20. With one throw left and d=0, scissors also has the largest expected terminal points: `0.60 + 0.5*0.10 = 0.65`. But with d=1:
+Take $q$ = 30% rock, 60% paper, 10% scissors. The net-payoff maximizer is scissors ($+0.30$); paper earns $+0.20$. With one throw left and $d=0$, scissors also has the largest expected terminal points: $0.60+0.5\cdot0.10=0.65$. But with $d=1$:
 
-- Paper loses with probability 0.10, so its expected match points are `1 - 0.5*0.10 = 0.95`.
+- Paper loses with probability $0.10$, so its expected match points are $1-0.5\cdot0.10=0.95$.
 - Scissors loses with probability 0.30, so its expected match points are 0.85.
 
-Paper is now better for the match objective. Verify all three choices, then find what changes at d=-1. This is a calculation about the objective, not a conclusion from one anecdotal match.
+Paper is now better for the match objective. Verify all three choices, then find what changes at $d=-1$. This is a calculation about the objective, not a conclusion from one anecdotal match.
 
-> **Checkpoint:** test the terminal conditions and one-step recursion by hand. Then compare the controller with a per-throw best response against a fixed synthetic distribution before using estimated q from a real opponent.
+> **Checkpoint:** test the terminal conditions and one-step recursion by hand. Then compare the controller with a per-throw best response against a fixed synthetic distribution before using estimated $q$ from a real opponent.
 ---page---
 # An experiment worth presenting
 
@@ -125,7 +132,7 @@ Choose one question you can answer within the session. A small, honest result is
 
 **Adaptive opposition.** Compare an undiscounted portfolio, a discounted portfolio and its individual experts against Markov and Adaptive Ensemble. Explain the gap between one-step virtual gains and separate complete-match outcomes.
 
-**Terminal utility.** Compare a final-30-throw controller with a net-payoff response. First use a known stationary q, then use an estimated q. Separate the effect of the objective from the effect of estimation error.
+**Terminal utility.** Compare a final-30-throw controller with a net-payoff response. First use a known stationary $q$, then use an estimated $q$. Separate the effect of the objective from the effect of estimation error.
 
 ## Report enough to reproduce it
 

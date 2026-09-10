@@ -35,6 +35,10 @@ jobs:
         with:
           python-version: "3.11"
       - uses: astral-sh/setup-uv@v5
+      - name: Install the handout typesetter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends texlive-latex-extra texlive-fonts-recommended lmodern
       - name: Build printable and offline materials
         run: |
           uv sync --locked --python 3.11 --group workshop

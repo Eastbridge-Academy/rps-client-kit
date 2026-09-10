@@ -1,4 +1,5 @@
 include uv.lock
 recursive-include workshop *.md *.py *.sh
+recursive-include workshop/latex *.sty *.pdf
 prune workshop/tmp
 global-exclude __pycache__ *.pyc

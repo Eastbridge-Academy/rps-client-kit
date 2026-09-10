@@ -1,7 +1,8 @@
 # Event-kit verification, September 10, 2026
 
-The local 0.3.0 participant deliverable is prepared for review. These checks do
-not mean a public release or production deployment has happened.
+This record covers version 0.3.0. GitHub builds the release assets from the
+version tag and records the source commit and file hashes in each event
+bundle's BUILD.json.
 
 ## Exercised paths
 
@@ -42,9 +43,16 @@ not mean a public release or production deployment has happened.
   the actual bots. Code blocks and displayed equations match the preceding
   version exactly. All 37 revised pages were rendered and inspected, with the
   same page counts and zero box warnings; the 70 kit tests and Ruff pass.
-- Both GitHub workflow files parse as YAML and both shell scripts pass syntax
-  checks. CI now covers Python 3.11, 3.12 and 3.13 and builds review artifacts;
-  hosted CI itself has not run because these commits have not been pushed.
+- Hosted GitHub test jobs pass on Linux with Python 3.11, 3.12 and 3.13, and on
+  macOS and Windows with Python 3.12. Each runs all 70 tests, Ruff, a package
+  build, and fresh project and uv-tool installs from the resulting wheel.
+  Each installation check exercises starter tests, validation, 3,006 practice
+  throws, JSON exports, submission packaging and preserved edits in paths with
+  spaces. The Windows run checks the executable without PowerShell activation.
+  Results: [CI run for 397bf51](https://github.com/Eastbridge-Academy/rps-client-kit/actions/runs/34484341911).
+- The hosted workshop build creates the six PDFs and event ZIP, then exercises
+  offline installation and participant commands. Both workflow files parse as
+  YAML and both shell scripts pass syntax checks.
 
 ## Arena integration
 
@@ -70,10 +78,9 @@ but were not silently added to that existing league. Runtime health is healthy.
 Run workshop/smoke_bundle.sh on the actual Raspberry Pi lab image before the
 session. ARM64 container coverage verifies architecture and Python compatibility;
 it is not a measurement of physical Pi startup time, CPU speed or RAM usage.
-Windows instructions have not been exercised on a Windows host.
 
-Choose and deploy the intended event server, publish the reviewed kit if desired,
-and give participants its URL, active league slug and submit token. Perform one
+Choose and deploy the intended event server and give participants its URL,
+active league slug and submit token. Perform one
 designated submission against that server before opening the room. The public
 production instance has not been changed by this participant-preparation work.
 

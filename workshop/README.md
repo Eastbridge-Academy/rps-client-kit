@@ -27,6 +27,9 @@ their lockfile hashes. It excludes the PDF toolchain and development tools.
 All bundled wheels must be platform-independent. Setup uses uv, an installed
 Python 3.11+, a local wheelhouse and no index or automatic Python download.
 
+See [the verification record](verification.md) for exercised platforms, Arena
+integration evidence and the remaining check on the physical lab image.
+
 Final outputs:
 
 - output/pdf/: four route packets, two-page field guide, facilitator notes.

@@ -70,6 +70,7 @@ def main():
     shutil.copytree(ROOT / "workshop/solutions", destination / "facilitator/solutions", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     (destination / "reference").mkdir()
     shutil.copy2(ROOT / "README.md", destination / "reference/client-kit-README.md")
+    shutil.copy2(ROOT / "workshop/verification.md", destination / "reference/verification.md")
     shutil.copy2(ROOT / "uv.lock", destination / "reference/uv.lock")
     if (ROOT / "LICENSE").is_file():
         shutil.copy2(ROOT / "LICENSE", destination / "reference/LICENSE")

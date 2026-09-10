@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 
 from rps_client.starter import initialize_starter_project
 
@@ -10,16 +9,16 @@ def test_initialize_starter_project_writes_bot_file(tmp_path, capsys):
 
     out = capsys.readouterr().out
     assert (tmp_path / "bot.py").exists()
-    assert "Starter bot written" in out
+    assert "Starter project ready" in out
     assert "rps-cli validate" in out
 
 
-def test_initialize_starter_project_requires_force_to_overwrite(tmp_path):
+def test_initialize_starter_project_preserves_edits_unless_forced(tmp_path):
     bot_path = tmp_path / "bot.py"
     bot_path.write_text("print('custom')\n")
 
-    with pytest.raises(SystemExit):
-        initialize_starter_project(tmp_path)
-
+    initialize_starter_project(tmp_path)
+    assert bot_path.read_text() == "print('custom')\n"
+    assert (tmp_path / "tests/test_bot.py").is_file()
     initialize_starter_project(tmp_path, force=True)
-    assert "Default implementation" in bot_path.read_text()
+    assert "This baseline is legal" in bot_path.read_text()

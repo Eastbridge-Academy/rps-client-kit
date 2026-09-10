@@ -1,4 +1,5 @@
 import rpsdk
+import pytest
 from rps_client.simulator import (
     AVAILABLE_BOTS,
     _load_house_bot,
@@ -40,9 +41,8 @@ def next_move(my_history, opponent_history, match_state):
     )
     monkeypatch.chdir(tmp_path)
 
-    run_local_simulation(["does_not_exist"], best_of=3)
-    out = capsys.readouterr().out
-    assert "Unknown opponent 'does_not_exist'" in out
+    with pytest.raises(ValueError, match="Unknown opponent 'does_not_exist'"):
+        run_local_simulation(["does_not_exist"], best_of=3)
 
 
 def test_load_house_bot_produces_legal_move():
@@ -99,3 +99,41 @@ def next_move(my_history, opponent_history, match_state):
     results = run_local_simulation(["rocky", "copycat"], best_of=3, bot_path=bot)
     assert len(results) == 2
     assert all(result.errors == 0 for result in results)
+
+def test_last_outcome_is_previous_throw_and_both_players_see_only_past_moves():
+    from types import ModuleType
+    from rps_client.simulator import LoadedHouseBot
+    from rps_house_bots import BotSpec
+    mine_states, their_states = [], []
+    def participant(mine, theirs, state):
+        assert len(mine) == len(theirs) == state["round"]
+        mine_states.append(state["last_outcome"])
+        return [rpsdk.Move.PAPER, rpsdk.Move.PAPER, rpsdk.Move.SCISSORS, rpsdk.Move.ROCK][state["round"]]
+    def opponent(mine, theirs, state):
+        assert len(mine) == len(theirs) == state["round"]
+        their_states.append(state["last_outcome"])
+        return rpsdk.Move.ROCK
+    module = ModuleType("observing_bot")
+    module.next_move = opponent
+    result = _simulate_series(participant, LoadedHouseBot(BotSpec("rocky"), module, 12), best_of=4, seed=12, record=True)
+    assert mine_states == [None, "win", "win", "loss"]
+    assert their_states == [None, "loss", "loss", "win"]
+    assert (result.wins, result.losses, result.draws) == (2, 1, 1)
+    assert [row["outcome"] for row in result.rounds] == [1, 1, -1, 0]
+
+
+def test_repeated_seeds_reproduce_practice_and_reset_helpers(tmp_path):
+    bot = tmp_path / "bot.py"
+    bot.write_text("import random\ndef next_move(*args): return random.choice(['rock','paper','scissors'])\n")
+    first = run_local_simulation(["sticky"], best_of=30, bot_path=bot, games=2, seed=81, record=True)
+    second = run_local_simulation(["sticky"], best_of=30, bot_path=bot, games=2, seed=81, record=True)
+    assert first == second
+    assert first[0].rounds != first[1].rounds
+
+
+def test_practice_kills_a_stuck_bot(tmp_path):
+    from rps_client.participant_bot import ParticipantBotError
+    bot = tmp_path / "bot.py"
+    bot.write_text("def next_move(*args):\n    while True: pass\n")
+    with pytest.raises(ParticipantBotError, match="exceeded"):
+        run_local_simulation(["rocky"], best_of=3, bot_path=bot, timeout=.5)

@@ -1,25 +1,22 @@
-"""Sample Rock-Paper-Scissors bot template."""
-
-from __future__ import annotations
+"""Your tournament bot. Edit next_move, then test, practice and submit."""
 
 from random import Random
-from typing import Dict, List
-
-from rpsdk import Move  # provided by tournament environment
+from rpsdk import Move
 
 _rng = Random()
 
 
-def setup(config: Dict) -> None:
-    """Called once before the match starts."""
-    seed = config.get("seed")
-    if seed is not None:
-        _rng.seed(seed)
+def setup(config: dict) -> None:
+    """Runs once per match. Reset any learned state here."""
+    _rng.seed(config["seed"])
 
 
-def next_move(my_history: List[Move], opponent_history: List[Move], match_state: Dict) -> Move:
-    """Return your next move.
+def next_move(my_history: list[Move], opponent_history: list[Move], match_state: dict) -> Move:
+    """Both histories contain completed throws, oldest first.
 
-    Default implementation: randomly choose among the three moves. Replace with your strategy!
+    They are empty on the first call. opponent_history[-1] is the opponent's
+    previous throw, never their current choice. A new match starts fresh.
     """
-    return _rng.choice([Move.ROCK, Move.PAPER, Move.SCISSORS])
+    # This baseline is legal and ready to submit. Try replacing it with a
+    # prediction, then play the move that beats your prediction.
+    return _rng.choice(list(Move))

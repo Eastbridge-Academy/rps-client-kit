@@ -59,3 +59,19 @@ def test_validate_imports_sibling_helper_without_changing_directory(tmp_path):
     bot = tmp_path / "bot.py"
     bot.write_text("def next_move(*args):\n    from validation_helper import MOVE\n    return MOVE\n")
     validate_local_bot(bot_path=bot, smoke=False)
+
+def test_contract_check_kills_stuck_import(tmp_path):
+    from rps_client.validation import _check_contract
+    from rps_client.participant_bot import ParticipantBotError
+    bot = tmp_path / "bot.py"
+    bot.write_text("while True: pass\n")
+    with pytest.raises(ParticipantBotError, match="timed out"):
+        _check_contract(bot, timeout=.5)
+
+
+def test_contract_check_exercises_nonempty_history(tmp_path, capsys):
+    bot = tmp_path / "bot.py"
+    bot.write_text("def next_move(mine, theirs, state):\n    if mine: return 'bad'\n    return 'rock'\n")
+    with pytest.raises(SystemExit):
+        validate_local_bot(bot_path=bot, smoke=False)
+    assert "must return one of" in capsys.readouterr().out

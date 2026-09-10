@@ -1,151 +1,165 @@
-Eastbridge RPS Client Kit
-=========================
+# Eastbridge RPS Client Kit
 
-This repository contains the student-facing tooling for the Eastbridge Rock-Paper-Scissors tournament:
+Build a Python rock-paper-scissors bot, practice against a varied house field,
+and submit versions to the Eastbridge Arena. Python 3.11+; Raspberry Pi 5,
+Linux and macOS are supported. The participant workflow mirrors the chess kit:
+initialize a project, test it, play locally, submit, then check validation status.
 
-- `rps-cli` for starter setup, local validation, play, submission, and status
-- `rpsdk` with the shared `Move` enum used by participant bots
-- `rps_house_bots` with the bundled local opponents used by the simulator
+## Start at the event
 
-Install
--------
-
-Recommended with `uv`:
+The facilitator supplies `rps-event-kit.zip` with this release's wheel, dependency
+wheels, printable handouts and a setup script. Extract it to `~/rps-event-kit`:
 
 ```bash
-uv tool install git+https://github.com/Eastbridge-Academy/rps-client-kit
+cd ~/rps-event-kit
+./start.sh ~/rps-bot
+cd ~/rps-bot
+source .venv/bin/activate
+rps-cli test
+rps-cli validate
+rps-cli opponents
+rps-cli play --against rocky,copycat --best-of 501 --seed 42 --games 3
 ```
 
-Or with `pipx`:
+The starter already plays a legal random strategy. Edit `bot.py` and run the
+checks again. The four handout routes share the same setup; switch routes freely.
 
-```bash
-pipx install git+https://github.com/Eastbridge-Academy/rps-client-kit
-```
+`start.sh` requires `uv` and Python 3.11+ and installs from the supplied wheels
+without querying a package index. Facilitators should prepare and test the lab
+before the workshop. A fresh terminal needs `source .venv/bin/activate` again.
 
-If you already cloned this repository:
+## Install from a checkout or wheel
+
+For development in this repository:
 
 ```bash
 uv sync
 uv run rps-cli --help
+uv run pytest
 ```
 
-Configure
----------
-
-Point the CLI at the tournament server and set the shared submit token:
+For a new participant project with a supplied release wheel:
 
 ```bash
-rps-cli config set api_url https://rps.eastbrid.ge
-rps-cli config set token <SUBMIT_TOKEN>
-```
-
-Or use environment variables:
-
-```bash
-export RPS_API_URL=https://rps.eastbrid.ge
-export RPS_SUBMIT_TOKEN=<SUBMIT_TOKEN>
-```
-
-Quickstart
-----------
-
-Start a new bot project:
-
-```bash
-rps-cli init my-bot
+mkdir my-bot
 cd my-bot
+uv venv
+source .venv/bin/activate
+uv pip install /path/to/eastbridge_rps_client_kit-0.3.0-py3-none-any.whl
+rps-cli init
+rps-cli test
 ```
 
-Run a local contract check and short smoke match from a folder containing `bot.py`:
+The source repository is https://github.com/Eastbridge-Academy/rps-client-kit.
+Do not use a guessed release tag: an unpushed local release is available through
+its event bundle until the organizer publishes it.
+
+## Configure and enter the tournament
+
+Use the server, active league slug and token supplied by the facilitator:
 
 ```bash
-rps-cli validate
-rps-cli validate --against rocky,copycat --best-of 9
-```
-
-Run longer local simulations:
-
-```bash
-rps-cli play
-rps-cli play --against rocky,copycat
-```
-
-Submit a bot:
-
-```bash
-rps-cli submit "Team Name" --email you@example.com
-```
-
-The CLI sends shared or league signup tokens as `Authorization: Bearer ...`, and includes the installed `rpsdk` with each submission.
-
-Check your latest submission state with:
-
-```bash
+rps-cli config set api_url https://arena.eastbrid.ge
+rps-cli config set league rps
+rps-cli config set token TOKEN
+rps-cli doctor
+rps-cli submit "Team Name"
 rps-cli status "Team Name"
 ```
 
-`status` shows the currently active tournament version, your latest submitted version, and any rejection reason returned by validation.
+`TOKEN` is a placeholder; the event token is not embedded in the kit or handouts.
+The league name above is an example, not automatic league discovery. For the dev
+rehearsal use `https://dev.arena.eastbrid.ge` and `rps-rehearsal`.
 
-Bot Contract
-------------
+Settings live in **the current project's `.rps-cli.json`**, like the chess kit.
+Run commands from the bot folder. `RPS_API_URL`, `RPS_LEAGUE` and
+`RPS_SUBMIT_TOKEN` override the project file. Environment overrides are not
+persisted when a different setting is saved. `info` and `config get token` mask
+secrets; the scaffold adds the config file to `.gitignore`.
 
-Participant bots should expose:
+Reuse the same team name on every submission. Uploading creates a version that
+must pass server validation. `status` shows both the active version and latest
+submission, including rejection reasons. A rejected replacement does not replace
+your previously active version. Editing local code alone never changes the arena.
+
+## Practice and investigate
+
+```bash
+rps-cli opponents --hints
+rps-cli play --against sticky,double_take --best-of 501 --games 5 --seed 100
+rps-cli play --against copycat --output throws.json
+rps-cli test -q
+rps-cli test -k first_throw
+rps-cli validate --against rocky,copycat --best-of 9
+rps-cli validate --no-smoke
+rps-cli info
+```
+
+`--games 5 --seed 100` uses seeds 100 through 104 for each opponent. Every match
+starts fresh, including helper-module globals and RNG state. `--output` saves
+all observed throws, seeds, scores and errors in JSON. Compare seeds reserved for
+testing, not just the ones used to tune your bot. Local practice reports match
+wins and throw W-L-D separately; it does not calculate tournament Elo.
+
+Practice defaults to a 30-second whole-match deadline; use `--timeout` for a
+longer local run. This is not the arena's per-throw enforcement. Local validation
+runs imports, setup and three history-aware calls in a bounded subprocess, then
+optional smoke matches. Both commands report bot errors with a nonzero exit code.
+
+## Bot contract
 
 ```python
 from rpsdk import Move
 
-def next_move(my_history: list[Move], opponent_history: list[Move], match_state: dict) -> Move:
+def setup(config: dict) -> None:  # optional, once per match
     ...
+
+def next_move(my_history: list[Move], opponent_history: list[Move],
+              match_state: dict) -> Move:
+    return Move.PAPER
 ```
 
-Optional:
+- The histories contain completed throws, oldest first. They are empty initially.
+- Both players choose without seeing the current opposing throw.
+- `setup` receives your bot's seed. The histories and process state reset for each match.
+- Return `Move.ROCK`, `Move.PAPER` or `Move.SCISSORS`; their lowercase strings also work.
+- `Move.from_value` normalizes a move, and `my_move.beats(other_move)` tests a win.
+- The arena runs exactly `best_of` throws, including draws. It does not stop when
+  someone reaches a majority. A 501-throw series can still end with equal scores.
 
-```python
-def setup(config: dict) -> None:
-    ...
-```
+`match_state` contains:
 
-Current `match_state` keys:
+| Key | Meaning |
+| --- | --- |
+| `round` | Zero-based throw index: 0 through `best_of - 1`. |
+| `best_of` | Fixed series length, currently 501 for the rehearsal. |
+| `seed` | Your bot's reproducibility seed, not the opponent's seed. |
+| `last_outcome` | Your last throw's `win`, `loss` or `draw`; `None` initially. |
+| `timeouts` | Your accumulated server timeouts in this match. |
+| `opponent_timeouts` | The opponent's accumulated server timeouts. |
 
-- `round`
-- `best_of`
-- `seed`
-- `opponent_last_outcome`
-- `timeouts`
-- `opponent_timeouts`
+Use the standard library and `rpsdk`. Submissions vendor the installed SDK;
+other locally installed packages are not automatically shipped. Source helpers
+and `data/` files are packaged, but the virtual environment and project config
+are not. Data file paths should be relative to `Path(__file__).parent`.
 
-Current local validation checks:
+The runtime isolates bot processes but is not a security boundary. Treat bot
+code as trusted workshop code. Keep imports and moves quick; do not use network
+calls, sleeps or large training jobs during a match.
 
-- `bot.py` imports successfully
-- `setup(config)` is optional but must be callable if present
-- `next_move(...)` must be callable and return `rock`, `paper`, or `scissors`
-- `validate` then runs a short local smoke series against bundled house bots
+## 0.3 participant-workflow changes
 
-Bundled House Bots
-------------------
+Configuration is project-local instead of home-global. Run the three config
+commands in each project; there is no silent migration of a shared token.
+The misleading `opponent_last_outcome` cumulative-score field is replaced by
+`last_outcome`, which describes the actual preceding throw from your perspective.
+The corresponding Arena worker update is required when deploying this kit.
 
-- `contrarian`
-- `copycat`
-- `cycle_counter`
-- `cycle_rps`
-- `random_uniform`
-- `rocky`
-- `switcheroo`
-- `win_stay_lose_shift`
+`init` preserves existing files unless `--force` is explicit. It also fills in
+missing tests and the README, so existing bot folders can adopt the new workflow.
 
-Release Workflow
-----------------
+## Releases
 
-Tags like `v0.1.2` trigger a GitHub Actions release build that uploads a wheel and source distribution to GitHub Releases.
-
-## SDK and catalogue source
-
-Version 0.2.0 makes `rpsdk` and `rps_house_bots` the canonical packages used by
-both the arena API/worker and this CLI. Import `Move` from `rpsdk`.
-`rps-cli play` starts fresh processes for each opponent, calls `setup`, and uses
-side-relative state. It is a practice tool; arena acceptance uses the worker's
-per-move limits and fault policy.
-
-The 13 opponents include constants, cycles, reactive rules, uniform/biased random
-baselines, changing bias, transition learning (`markov`), sequence matching
-(`sequence_hunter`), and adaptive prediction (`adaptive_ensemble`).
+Tags trigger the repository's GitHub Actions wheel/source release build. The
+organizer reviews and publishes a tested tag; local build scripts also produce
+an event bundle so the workshop can use the exact reviewed version offline.

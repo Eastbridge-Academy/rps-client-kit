@@ -55,7 +55,7 @@ def build_sample_match_state(*, seed: int, round_number: int = 0, best_of: int =
         "round": round_number,
         "best_of": best_of,
         "seed": seed,
-        "opponent_last_outcome": "draw",
+        "last_outcome": None,
         "timeouts": 0,
         "opponent_timeouts": 0,
     }

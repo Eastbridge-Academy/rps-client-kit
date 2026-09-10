@@ -17,7 +17,7 @@ from rps_client.participant_bot import ParticipantBotError
 from rps_client.starter import initialize_starter_project
 from rps_client.simulator import run_local_simulation
 from rps_client.status import show_bot_status
-from rps_client.submission import submit_bot_archive
+from rps_client.submission import _build_submission_archive, submit_bot_archive
 from rps_client.validation import validate_local_bot
 from rps_house_bots import list_bots
 
@@ -168,6 +168,26 @@ def validate(
     except (ParticipantBotError, ValueError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(1) from exc
+
+
+@app.command()
+def package(
+    output: Path = typer.Option(Path("submission.zip"), "--output", help="Local archive destination."),
+    bot_path: Path = typer.Option(Path("bot.py"), "--bot", help="Participant entry file."),
+) -> None:
+    """Build the exact submission archive without contacting the arena."""
+    import io
+    import zipfile
+    try:
+        archive = _build_submission_archive(bot_path)
+        output.write_bytes(archive)
+    except (OSError, ParticipantBotError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+    with zipfile.ZipFile(io.BytesIO(archive)) as zf:
+        for name in zf.namelist():
+            typer.echo(name)
+    typer.echo(f"Saved {output} ({len(archive)} bytes); nothing was uploaded.")
 
 
 @app.command()

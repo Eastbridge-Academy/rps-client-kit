@@ -1,6 +1,6 @@
 # A bot in the arena
 
-Two bots choose rock, paper or scissors without seeing each other's current choice. You write one of them. Your first job is to enter a working bot; the rest of the session is a cycle of making a prediction, testing it and deciding whether the evidence deserves your trust.
+You'll write a Python bot that plays rock, paper, scissors against everyone else's bots. Both players choose at the same time. We'll start by entering the supplied random bot, then spend most of the session changing how it plays.
 
 ## Start with a working project
 
@@ -15,13 +15,13 @@ rps-cli test
 rps-cli validate
 ```
 
-The setup script uses the supplied kit and dependency wheels. It needs **uv and Python 3.11+**, already prepared on the lab machines. A personal-machine setup is in the bundle README. If you open a new terminal, return to `~/rps-bot` and activate `.venv` again.
+These commands install the kit and its dependencies from the supplied folder. **uv and Python 3.11+** are already installed on the lab machines; for your own computer, see the bundle README. Whenever you open a new terminal, return to `~/rps-bot` and activate `.venv` again.
 
-Open **bot.py** in your editor. The starter chooses randomly and is already legal. The tests should pass before you change anything. `rps-cli init` can restore missing scaffold files while preserving your bot; `--force` replaces your edits, so use it deliberately.
+Open **bot.py** in your editor. It currently chooses a random move, and its tests should pass as supplied. If you accidentally delete a starter file, `rps-cli init` will restore missing files. Adding `--force` also overwrites files you've edited.
 
-## Enter early, improve often
+## Submit your bot
 
-Copy the **server URL, league slug and submit token** from the facilitator. The token below is a placeholder, not a real event credential.
+Your facilitator will give you the **server URL, league slug and submit token**. Substitute those values in the commands below, including replacing `TOKEN` with the supplied token.
 
 ```bash
 rps-cli config set api_url https://arena.eastbrid.ge
@@ -32,14 +32,14 @@ rps-cli submit "Your Team Name"
 rps-cli status "Your Team Name"
 ```
 
-Use the event's actual league slug if it differs from `rps`. Settings belong to this project folder. Reuse the **same team name** every time you submit. An upload is queued for server validation; `status` tells you when it is active and explains a rejection. Saving bot.py alone does not change the tournament version.
+The settings are saved in your project folder. Reuse the **same team name** for later submissions so they replace your earlier version. The server checks each upload before letting it play; `status` shows when it becomes active, or why it was rejected. Run `submit` again whenever you want the tournament to use your latest edits.
 
-> **First checkpoint:** your tests pass, your project knows the correct event, and you can distinguish an uploaded version from an active one. If setup stalls, ask for help now; your time is better spent building a strategy.
+> **Before moving on:** run `status` and find your active version. If you're stuck on installation or submission, ask a facilitator to take a look.
 
 ---page---
 # What your bot sees
 
-The arena imports bot.py into a fresh process for each match. It calls `setup(config)` once if you define it, then calls `next_move(...)` for each throw. The starter has this shape:
+For each match, the arena starts a fresh Python process and imports bot.py. It calls `setup(config)` once, if you've defined it, then asks `next_move(...)` for each throw. Here is the starter bot:
 
 ```python
 from random import Random
@@ -54,9 +54,9 @@ def next_move(my_history, opponent_history, match_state):
     return _rng.choice(list(Move))
 ```
 
-`Move.ROCK`, `Move.PAPER` and `Move.SCISSORS` are the three choices. `a.beats(b)` is true when a beats b. Returning the lowercase strings also works, but using the enum makes spelling mistakes easier to catch.
+Return `Move.ROCK`, `Move.PAPER` or `Move.SCISSORS` from next_move. These values also have a comparison method: `a.beats(b)` tells you whether a beats b. The arena accepts lowercase strings too, though the named values help catch spelling mistakes.
 
-## History is evidence, not a preview
+## Reading the histories
 
 Both history lists contain **completed throws, oldest first**. On the first call, both are empty. After two throws, you might see:
 
@@ -65,7 +65,7 @@ my_history       == [Move.ROCK, Move.PAPER]
 opponent_history == [Move.SCISSORS, Move.ROCK]
 ```
 
-You won both of those throws. The next opposing move is still hidden. `opponent_history[-1]` means their last move, while `my_history[-1]` means yours. Guard an empty list before using `[-1]`, and check for at least two elements before using `[-2]`.
+You won both of those throws. `opponent_history[-1]` gives their last move, while `my_history[-1]` gives yours. Check that a list has an entry before using `[-1]`, or two entries before using `[-2]`. The histories never include the throw you're about to choose.
 
 | State entry | Meaning |
 | --- | --- |
@@ -75,15 +75,15 @@ You won both of those throws. The next opposing move is still hidden. `opponent_
 | `seed` | Your bot's reproducibility seed. |
 | `timeouts`, `opponent_timeouts` | Accumulated server timeouts in this match. |
 
-Learned state and histories reset between matches. If you keep counters in module globals, reset them in setup. Do not seed your generator on every throw; seed it once, then keep drawing from it.
+Each match starts with empty histories and fresh learned state. Reset any global counters in setup so your bot also works when tests call setup repeatedly. Seed the random generator there once; next_move can then draw from it throughout the match.
 
-> **Check your understanding:** if you want to predict Copycat, which history belongs in the prediction? Its rule is to copy **your** preceding move. The two history arguments are not interchangeable.
+> **Try it on paper:** Copycat copies your preceding move. Given the two histories above, what will it play next? Which history did you use?
 ---page---
-# Why there is room to win
+# Can you beat random play?
 
-Suppose the opponent always chooses rock. Paper wins every throw. Suppose they choose each move independently with probability one third. Now every move you choose wins one third of the time, loses one third and draws one third. Looking at their previous moves does not change those probabilities.
+Against a bot that always chooses rock, you can win every throw by choosing paper. Against one that chooses each move independently with probability one third, any move you pick wins, loses and draws with equal probability. Its previous moves give you no help with the next one.
 
-For the calculations in these sheets, a throw earns **+1 for a win, 0 for a draw, -1 for a loss**. This is a convenient measure of net advantage; the arena determines a match winner by comparing the numbers of throws won.
+We'll calculate payoff as **+1 for a win, 0 for a draw, -1 for a loss**. Adding those values over a match gives your wins minus your losses. Whoever wins more throws wins the match.
 
 | Your move | Opponent rock | Opponent paper | Opponent scissors |
 | --- | --- | --- | --- |
@@ -91,37 +91,37 @@ For the calculations in these sheets, a throw earns **+1 for a win, 0 for a draw
 | Paper | +1 | 0 | -1 |
 | Scissors | -1 | +1 | 0 |
 
-## Randomness is a strong baseline
+## The Nash equilibrium
 
-Independent uniform random play remains a Nash equilibrium. Neither player can improve their expected payoff by changing strategy while the other keeps playing that way. More history, a Markov chain, or a clever learning algorithm cannot systematically beat a truly independent uniform opponent.
+When both players choose independently and uniformly, neither can improve their expected payoff by changing strategy alone. This is a **Nash equilibrium**. Even a bot with the full match history and a very good prediction algorithm has expected net payoff zero against an independent uniform opponent.
 
-What changes in this event is the opposition. Some bots favor a move, repeat sequences, react to your history, or change behavior halfway through a match. Those habits make a **conditional prediction** possible. You are looking for evidence of a habit, not a flaw in the equilibrium.
+Several house bots do something more predictable. One favors rock; another repeats a sequence; Copycat copies your last move. You can use those habits to predict what comes next and choose a winning reply. Much of the workshop is about learning to recognize them from a short history.
 
-A bot that plays `rock, paper, scissors` repeatedly has perfectly balanced totals after every three throws, yet its next move is predictable. Equal frequencies are not the same as independence. Conversely, a fair random bot can show a streak of rock without having acquired a habit.
+A repeating `rock, paper, scissors` bot is an especially helpful example. Count its moves after any complete cycle and you'll find equal totals. But once you've seen rock, you know paper is coming. A random bot can also produce that sequence by chance, so you'll need more than one occurrence before treating it as a pattern.
 
-The kit uses seeded pseudorandom generators so experiments can be repeated. Treat seeds as experiment controls, not as a way to reverse-engineer another bot's random stream. The mathematical baseline assumes the current random choice is independent and unavailable to the opponent.
+The kit uses seeded pseudorandom generators to make practice matches repeatable. The exercises use those seeds to compare versions under the same conditions. They assume each bot's current random choice is private; reconstructing an opponent's generator from its seed would be a different problem.
 
 ---page---
-# Test, compare and improve
+# Practice matches
 
-A useful experiment makes one change, holds the conditions steady, and asks whether the result survives a fresh set of matches. Keep a working bot in the arena while you investigate.
+You can play practice matches on your own machine while your submitted bot competes in the arena. Save a copy before trying a new strategy, so you can compare the two versions or go back to the earlier one.
 
-## Count the right thing
+## Reading the score
 
 A **throw** is one simultaneous choice. A **match** is a fixed series, normally 501 throws. A **league round** schedules each pair of bots. Despite the historical name `best_of`, the arena plays the full series; it does not stop at 251 wins. Drawn throws still count, and a 501-throw match can finish level.
 
-If a match ends 290-102, there were 109 drawn throws. The match earns a win for the first bot; a larger margin does not multiply the match result used by the rating system. Local practice shows both match results and throw totals, not Elo.
+For example, a 501-throw match ending 290-102 had 109 draws. The rating system records a match win for the first bot, regardless of the size of that margin. Local practice reports match results and throw totals; ratings belong to the arena.
 
 ```bash
 rps-cli play --against random_uniform --games 5 --seed 100
 ```
 
-> **Before trusting an improvement:** run several fresh seeds, keep the series length fixed, inspect errors, and compare more than one opponent. One lucky match against random play is not evidence of an exploit. Reserve seeds you did not use while tuning.
+> **Comparing versions:** use the same opponents, seeds and series length for both bots. Once you've chosen a version, try it on some fresh seeds as well. Check the error counts before you read much into the score.
 
-## Keep the bot light
+## What gets uploaded
 
-Keep each call quick. Use the standard library and `rpsdk`; your whole virtual environment is not uploaded. Imported local helper modules/packages and files in `data/` are bundled. Open data relative to `Path(__file__).parent`. Avoid network calls, sleeps and large training jobs inside your bot.
+Your upload includes the installed `rpsdk`, imported local helper modules and packages, and files in `data/`. Other packages from your virtual environment are left out, so use the standard library for these exercises. Open data files relative to `Path(__file__).parent`. Each move has a time limit; network calls, sleeps and large training jobs are likely to exceed it.
 
-## Make time for the whole experiment
+## During the session
 
-**A two-hour rhythm:** spend the first 20 minutes getting a bot running and understanding the rules. Use about 70 minutes for the route you chose, 20 minutes to test on fresh seeds, and the last 10 to submit and compare notes. Skip optional challenges freely.
+Allow about 20 minutes for setup and the rules, then 70 minutes for your chosen route. Leave another 20 minutes to test your final version on fresh seeds and 10 to submit it. You can skip an optional exercise or switch routes whenever you like.

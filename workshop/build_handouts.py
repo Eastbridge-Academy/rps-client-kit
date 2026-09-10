@@ -20,13 +20,13 @@ BUILD = ROOT.parent / "output/latex"
 ROUTES = ("beginner", "intermediate", "advanced", "expert")
 SUBTITLES = {
     "A bot in the arena": "Getting started",
-    "What your bot sees": "The client-kit contract",
-    "Why there is room to win": "Randomness and prediction",
-    "Test, compare and improve": "A useful experiment",
+    "What your bot sees": "Inside bot.py",
+    "Can you beat random play?": "Randomness and prediction",
+    "Practice matches": "Scores and local testing",
     "Route A: find a pattern": "Route A / Beginner",
-    "Route B: estimate and adapt": "Route B / Intermediate",
-    "Route C: learn the dependency": "Route C / Advanced",
-    "Route D: compete with your models": "Route D / Expert",
+    "Route B: count the moves": "Route B / Intermediate",
+    "Route C: Markov models": "Route C / Advanced",
+    "Route D: combine several strategies": "Route D / Expert",
 }
 
 
@@ -209,7 +209,7 @@ def field_guide() -> None:
     pages = []
     for page in range(2):
         lines = [r"\workshoptitle{Meet the house bots}{" + ("Patterns and personalities" if page == 0 else "Memory, adaptation and a baseline") + "}",
-                 r"{\small Rules and hints are open. Route labels suggest a teaching path, not a universal strength ranking.\par}",
+                 r"{\small The route labels point to the relevant exercises. Try the hints below if you get stuck predicting a bot.\par}",
                  r"\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}",
                  r"\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}",
                  r"\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule"]

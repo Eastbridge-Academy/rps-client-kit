@@ -1,6 +1,6 @@
-# Route B: estimate and adapt
+# Route B: count the moves
 
-A biased opponent does not need to repeat a fixed pattern. If it plays rock 60% of the time, paper 25% and scissors 15%, paper has expected net payoff $0.60-0.15=+0.45$ per throw. A noisy observation can still be useful.
+Biased Random plays rock 60% of the time, paper 25% and scissors 15%. Against it, paper has expected net payoff $0.60-0.15=+0.45$ per throw. We'll build a bot that estimates those probabilities from the history, so it can respond to biases we haven't told it about.
 
 ## Step 1: count what you have seen
 
@@ -17,26 +17,26 @@ values = {
 }
 ```
 
-The numbers are estimated wins minus losses, up to a common factor. Dividing each by the number of observations would give estimated net payoff per throw, but would not change which is largest. When several moves tie, choose randomly among the tied moves.
+Each value counts how many of the observed moves it would have beaten, minus how many would have beaten it. Divide by the history length to get an estimated payoff per throw. Either way, the largest value identifies the same move. Choose randomly among ties.
 
 Do not automatically counter the most frequent move. If the distribution is **40% rock, 21% paper, 39% scissors**, paper's expected payoff is only $+0.01$, while rock's is $+0.18$. Rock exploits the abundant scissors without losing often to paper.
 
-> **Paper check:** calculate all three expected payoffs for that distribution using the shared payoff table. Then explain why prediction accuracy and playing strength are different objectives.
+> **Try the calculation:** work out all three expected payoffs for the 40/21/39 distribution using the payoff table. Why does rock have a higher expected payoff than paper?
 
-## Step 2: establish a baseline
+## Step 2: test the estimates
 
 ```bash
 rps-cli play --against biased_random --games 5 --seed 100
 rps-cli play --against random_uniform --games 5 --seed 100
 ```
 
-The first opponent has a genuine bias. The second is your calibration control. An early imbalance against Random Uniform can be ordinary noise, so compare fresh seeds before declaring that your estimator has found a weakness.
+You should have an advantage against Biased Random. Against Random Uniform, your counts will still be uneven, particularly early in a match, but they won't predict its next move. Try several seeds and watch how the results vary.
 
-Add a modest observation threshold before committing strongly. Try thresholds such as 5, 15 and 30, and keep the rest of your code unchanged. A larger threshold trades slower exploitation for more evidence; it does not certify that the distribution is stationary.
+Try waiting for 5, 15 or 30 observations before using the counts, playing randomly until then. Keep the rest of your code unchanged. Waiting gives you more data to estimate from, at the cost of some throws you could have won against Biased Random.
 ---page---
-# When the past goes stale
+# An opponent that changes its mind
 
-Switcheroo plays rock for the first half of the series and scissors afterwards. An all-history count can keep recommending paper long after that has become a losing reply. Your observations are accurate; the assumption that they all describe the present is wrong.
+Switcheroo plays rock for the first half of the series and scissors afterwards. By the time it switches, your bot has counted hundreds of rocks. Those old observations can keep it choosing paper for the rest of the match.
 
 ## Step 3: shorten the memory
 
@@ -54,7 +54,7 @@ rps-cli play --against switcheroo,shifting_bias --games 5 --seed 200
 rps-cli play --against biased_random --games 5 --seed 200
 ```
 
-Shifting Bias changes its favored move every 50 throws; the favorite has probability 70%, and the others 15% each. Its initial favorite varies with the seed. Watching how long your bot takes to recover after a switch is more informative than a single final score.
+Shifting Bias changes its favored move every 50 throws; the favorite has probability 70%, and the others 15% each. Its initial favorite varies with the seed. For each window size, count how many throws your bot needs to recover after a switch.
 
 ## Step 4: inspect the change
 
@@ -75,17 +75,17 @@ for start in range(0, len(match["rounds"]), 50):
     print(start, sum(row["outcome"] for row in block))
 ```
 
-The final block may contain only one throw in a 501-throw match. Do not compare its raw total to a full 50-throw block as if they had equal length; divide by the number of throws when needed.
+In a 501-throw match, the final block has just one throw. Divide each block's total by its length if you want to compare average payoffs.
 
-> **Checkpoint:** identify one opponent where forgetting helps and one where it hurts. Describe the tradeoff in terms of changing behavior and noisy samples, rather than saying that one window is always best.
+> **Compare:** which window worked best against Switcheroo? Did the same window work best against Biased Random? Look at the throws around a switch to explain any difference.
 ---page---
-# Condition on something useful
+# Using the previous throw
 
 Sticky is balanced in the long run, yet it repeats its previous move with probability 0.8. The other two moves each have probability 0.1. If its last move was rock, paper has expected net payoff $0.8-0.1=+0.7$ on the next throw.
 
-## Step 5: separate total counts from conditional counts
+## Step 5: respond to Sticky
 
-Try countering Sticky's last move. Compare this with the frequency-only bot. The first uses the condition "its last move was rock"; the second mixes together all three situations and can lose the useful information.
+Try countering Sticky's last move and compare the result with your counting bot. Overall counts mix together the throws after rock, paper and scissors. Keeping those cases separate lets you use Sticky's tendency to repeat.
 
 Now inspect **Win Stay Lose Shift**. It repeats after a win **or a draw**, and after a loss chooses uniformly between the two other moves. You can reconstruct its previous outcome from the histories:
 
@@ -100,21 +100,21 @@ If the opponent just lost with rock, it will next choose paper or scissors. Your
 
 ## Step 6: predict a reactive opponent
 
-Contrarian always counters your previous move after its opening. If you played rock, it will choose paper, so your reply should be scissors. This is another case where the useful evidence is in **my_history**.
+After its opening, Contrarian always counters your previous move. If you played rock, it will choose paper, so your reply should be scissors. Use **my_history** to make this prediction.
 
 ```bash
 rps-cli play --against sticky,win_stay_lose_shift,contrarian
 ```
 
-A hand-written response to a named house bot is a good way to test understanding. In the tournament, deciding **when that model applies** is another problem. Compare how many recent observations agree with each rule, and keep a fallback for cases where none fits.
+Your tournament bot will have to decide which rule fits the opponent. Count how many recent observations agree with each rule, and use the random fallback when none fits well.
 
-> **Checkpoint:** for each of the three opponents above, state the condition your predictor uses. Explain why one universal rule such as "counter the last opposing move" does not solve all three.
+> **Check:** write the prediction rule for Sticky, Win Stay Lose Shift and Contrarian. Walk through an opening, a win and a loss for each. Does your code use the right player's history and outcome?
 
-**Optional bridge to the next route:** instead of encoding Sticky's repeat probability, learn three separate tables, one for each last opposing move. That is a first-order Markov model.
+**Next route:** learn Sticky's probabilities from three separate tables, one for each last opposing move. This is a first-order Markov model.
 ---page---
-# Make the comparison fair
+# Comparing your bots
 
-By now you may have several plausible policies: all-history counts, a short window, a reactive rule and a random fallback. The temptation is to keep whichever won the most recent game. That also selects lucky runs.
+You now have several strategies to compare: counts over the whole history, a short window, and rules that respond to the previous throw. Save each as a separate version and run them against the same opponents.
 
 ## Step 7: reserve a test set
 
@@ -133,16 +133,16 @@ Every match starts with a fresh process and fresh learned state. You cannot carr
 | Recent window |  |  |  |  |
 | Your combined policy |  |  |  |  |
 
-For each column, record both **match W-L-D** and average **net payoff per throw**. They answer different questions. A huge win over one weak bot does not cancel a match loss to every other bot in the same way that pooled throw totals suggest.
+For each column, record **match W-L-D** and average **net payoff per throw**. Keep the results for each opponent separate. Otherwise, a large margin against Rocky can hide a string of narrow losses against the rest of the field.
 
-## Step 8: add uncertainty without making promises
+## Step 8: mix in random moves
 
-One simple experiment is to use your learned policy on 80% of throws and the uniform baseline on the rest. This makes your own behavior less rigid, but it can also throw away a real advantage. Compare it; do not assume the word "random" makes it safer in every sense.
+Try using your learned policy on 80% of throws and choosing uniformly at random on the rest. This gives an opponent fewer predictable moves to respond to. You'll also win fewer throws where your prediction was already correct. Add the mixed version to your comparison.
 
-If you try many windows, thresholds and mixtures on the same seeds, those seeds become part of training. Use a genuinely new batch for your final check. Random fluctuations and opponent adaptation mean a short local score is evidence with limits, not a guarantee.
+Each time you choose a window, threshold or mixture based on its score, you're tuning to those matches. Use a new batch of seeds for the final comparison to see how well the choice carries over.
 
-## Submit a version you can defend
+## Submit your latest version
 
 Run `rps-cli test` and `rps-cli validate`, then submit under your existing team name and check that the latest version is active. Keep your earlier working bot available in case an ambitious change introduces an error near the end.
 
-> **Final discussion:** which assumption does your bot make about the opponent, what observation would contradict it, and how quickly would your policy respond? A clear answer is more useful than an unexplained leaderboard position.
+> **Discuss:** show a partner a match where your bot struggled. What was it predicting? How many throws did it take to change its prediction, and would a different window have helped?

@@ -36,6 +36,12 @@ not mean a public release or production deployment has happened.
 - The source archive includes the LaTeX preamble and logo; it can be built
   without the courses checkout. The participant wheel excludes the typesetter,
   and the offline bundle includes finished PDFs. ReportLab is no longer needed.
+- A subsequent prose edit covered all six handouts, the house-bot catalogue,
+  the bundle README and the reference-bot instructions. It replaced repeated
+  warnings and abstract teaching slogans with explanations and exercises about
+  the actual bots. Code blocks and displayed equations match the preceding
+  version exactly. All 37 revised pages were rendered and inspected, with the
+  same page counts and zero box warnings; the 70 kit tests and Ruff pass.
 - Both GitHub workflow files parse as YAML and both shell scripts pass syntax
   checks. CI now covers Python 3.11, 3.12 and 3.13 and builds review artifacts;
   hosted CI itself has not run because these commits have not been pushed.

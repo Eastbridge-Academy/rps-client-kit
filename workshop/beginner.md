@@ -1,8 +1,8 @@
 # Route A: find a pattern
 
-Start here if Python is new to you, or if you would like a few concrete wins before building a larger model. You can finish a useful bot with a return statement, a small dictionary and a careful choice of history.
+Start here if you're new to Python. We'll first beat a bot that always plays rock, then try a few opponents whose moves follow a rule. Along the way you'll use return statements, dictionaries and the two history lists.
 
-## Step 1: a bot that knows one thing
+## Step 1: beat Rocky
 
 Rocky always plays rock. In bot.py, replace the final line of next_move with:
 
@@ -17,9 +17,9 @@ rps-cli test
 rps-cli play --against rocky --best-of 501
 ```
 
-You should win **501-0-0** against Rocky, with zero errors. Try returning rock, then scissors. Predict the result before each run and put paper back afterwards. If you get errors, read the first traceback from the tests rather than changing the strategy at random.
+You should win **501-0-0** against Rocky, with zero errors. Try returning rock, then scissors. Predict the score before each run and put paper back afterwards. If a test fails, its traceback gives the line where Python ran into trouble.
 
-## Step 2: make the winning reply reusable
+## Step 2: a dictionary of replies
 
 Add this dictionary above next_move, outside the function:
 
@@ -31,17 +31,17 @@ COUNTER = {
 }
 ```
 
-`COUNTER[Move.ROCK]` looks up the value stored for rock, which is paper. The dictionary is a small table of answers. It is not a prediction yet; you still have to decide which move the opponent is likely to choose.
+`COUNTER[Move.ROCK]` looks up the value stored for rock, which is paper. Once you've guessed what the opponent will play, this dictionary gives you the move that beats it.
 
-Try `return COUNTER[Move.ROCK]`. It should behave exactly like the earlier paper bot. This is a useful kind of test: reorganizing code should not accidentally change what it does.
+Try `return COUNTER[Move.ROCK]` and run the Rocky match again. You should get the same score as before.
 
-> **Checkpoint:** your bot beats Rocky every throw, and you can explain the difference between a predicted move and the move you actually return.
+> **Check:** what do `COUNTER[Move.PAPER]` and `COUNTER[Move.SCISSORS]` return? Run each against Rocky. Can you account for the scores?
 
-**Next target:** `cycle_rps` repeats rock, paper, scissors. A constant paper bot has no lasting advantage there. Before writing more code, write its first six moves and a winning reply under each one.
+**Next opponent:** `cycle_rps` repeats rock, paper, scissors. Write its first six moves and a winning reply under each one. How would your paper-only bot do?
 ---page---
 # Predict the next move
 
-A common mistake is to beat what the opponent just played. Against a repeating cycle, that is one throw too late. If the last move was rock, the next move will be paper, so your reply should be scissors.
+Cycle RPS moves on after every throw. If it just played rock, it's about to play paper, so you'll need scissors. Let's use the last move to work out the next one.
 
 ## Step 3: follow the cycle
 
@@ -55,19 +55,19 @@ def next_move(my_history, opponent_history, match_state):
     return COUNTER[prediction]
 ```
 
-The first branch handles the empty history. `if not opponent_history` means there are no completed opposing moves yet. The negative index `[-1]` means the last item, not the item at position one.
+The first branch handles the empty history: `if not opponent_history` is true before any throws have finished. Later calls use `[-1]`, Python's index for the last item in a list.
 
 ```bash
 rps-cli play --against cycle_rps --best-of 501
 ```
 
-For this known bot, the paper opening also wins the first throw. Now change the opening to a random choice. Does one uncertain opening stop the rest of the strategy from working? Count the throws rather than relying on the match's Win label.
+Cycle RPS opens with rock, so paper wins the first throw too. Now change your opening to a random choice and run it again. How many throws did that change affect?
 
-## Step 4: a different kind of pattern
+## Step 4: play Copycat
 
 Copycat chooses a random opening, then copies **your previous move**. If you played rock last time, its next choice is rock, regardless of what it played itself.
 
-Adapt the prediction line to this opponent. You need `my_history`, not `opponent_history`. Keep the guard for the first throw. Test it on Copycat, then explain why it is not generally a winning strategy against Cycle RPS.
+Change the prediction line to use `my_history`. Keep the opening branch, since Copycat's first move is random. Test the result on Copycat, then run the same bot against Cycle RPS. Where does its prediction go wrong?
 
 | Completed throw | You played | Copycat played | What will Copycat play next? |
 | --- | --- | --- | --- |
@@ -75,15 +75,15 @@ Adapt the prediction line to this opponent. You need `my_history`, not `opponent
 | 2 | Paper | Rock |  |
 | 3 | Scissors | Paper |  |
 
-**Try Echo Two:** this bot copies your move from **two throws ago**. Work out which index you need and how many completed throws you must have before using it. The first two moves are uncertain; judge the strategy after those openings.
+**Try Echo Two:** this bot copies your move from **two throws ago**. Which index will you need? How many entries must the history have before you can use it? Look at the score after the first two throws, once Echo Two has something to copy.
 
-> **Checkpoint:** you have tested a cycle predictor and a mimic predictor. You can say whose history each uses and why. Save copies of your working versions before combining them.
+> **Save your work:** keep a copy of each bot that works. Label it with the opponent it was written for; you'll combine these ideas on the next page.
 ---page---
-# Put the ideas together
+# Recognizing an opponent
 
-In the tournament you do not get a label telling you that the opponent is Copycat. Your bot must choose a strategy from the evidence in its histories. A rule that wins one practice matchup is a useful experiment, not yet a universal bot.
+The tournament doesn't tell next_move which opponent it's facing. To choose between your cycle and Copycat strategies, you'll have to inspect the moves played so far.
 
-## Step 5: test a hypothesis before using it
+## Step 5: look for the cycle
 
 Suppose you want to recognize the cycle. After eight completed throws, check whether each recent move follows the cycle's rule. For a pair of adjacent opposing moves, the check is:
 
@@ -93,7 +93,7 @@ opponent_history[i] == COUNTER[opponent_history[i - 1]]
 
 Check several adjacent pairs: a random bot can match a short pattern by accident. If the checks agree, predict the continuation. Otherwise keep the random baseline.
 
-To recognize Copycat, compare `opponent_history[i]` with `my_history[i - 1]` for completed throws after the opening. Be careful: using the same index on both sides tests a different rule. For Echo Two, the gap is two.
+For Copycat, compare `opponent_history[i]` with `my_history[i - 1]` after the opening. The offset matters because Copycat copies your preceding throw. For Echo Two, use a gap of two instead.
 
 Start with one working detector. If two hypotheses fit the same short history, gather more evidence before choosing between them.
 
@@ -113,10 +113,10 @@ Describe each version in a notebook: "paper only" or "cycle detector with eight 
 | One predictor |  |  |  |
 | Combined bot |  |  |  |
 
-When a bot fails, distinguish a **Python error** from a **wrong prediction**. Tests and `validate` help with the first. Practice results and saved throws help with the second. Losing to a clever opponent is not a syntax error.
+If the bot reports errors, run the tests and `validate` to find the problem. If it runs normally but loses, inspect a few throws where its prediction was wrong. Which rule was it using?
 
-## Finish with a version you understand
+## Submit your latest version
 
-Submit under your existing team name and check `status`. Open your match history on the dashboard. Find a place where your prediction was right, and a place where it was wrong. Tell a partner which evidence your bot uses and one opponent you expect to trouble it.
+Submit under your existing team name and check `status`. Open a match on the dashboard and walk through a few throws with a partner. Show them how your bot chose its move, including any guesses that went wrong.
 
-**Next route:** use counts to detect biases that do not repeat perfectly. Keep separating the opponent's behavior, your prediction and your reply.
+**Want to try another route?** The intermediate packet uses counts to predict bots that favor certain moves without repeating an exact pattern.

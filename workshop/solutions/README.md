@@ -1,8 +1,8 @@
 # Facilitator reference implementations
 
-These are small examples to inspect and modify, not guaranteed tournament winners.
-Keep this directory off the starting student desktop if you prefer participants
-to discover the ideas themselves. Each bot is a complete alternative to bot.py.
+These bots implement the workshop exercises. Each can replace bot.py in a
+participant project. You can share them for comparison after participants have
+tried the exercises, or let people start by reading and modifying one.
 
 From this directory, after activating the participant environment:
 
@@ -20,18 +20,19 @@ project, copy the selected file as bot.py **and** copy lesson_models beside it.
 The beginner example is self-contained. Keep the starter tests in the project.
 
 - Beginner: require eight matching recent transitions after ten observations;
-  conflicting predictions fall back to uniform. It can mistake a short coincidence
-  for a rule. The lesson starts with simpler named-opponent experiments.
+  conflicting predictions fall back to uniform. Short coincidences can still
+  fool it. The handout builds up to this from individual opponent rules.
 - Intermediate: a 30-throw window and maximum expected payoff, randomizing ties.
   It forgets old regimes but does not condition on sequence context.
-- Advanced: incremental order-two counts, Laplace smoothing and support-three
-  backoff. Compare against order one to expose Double Take's hidden dependency.
+- Advanced: update order-two counts incrementally, use Laplace smoothing, and
+  back off when a context has fewer than three observations. Compare against
+  order one on Double Take.
 - Expert: eight action-distribution experts, stored proposals, undiscounted
-  exponential weighting, stable normalization. Virtual scores use the actual
-  realized history, not counterfactual complete matches.
-- Terminal: frequency response until the last 30 throws, then a fixed estimated-q
-  dynamic program. Freezing an estimate makes the controller small and coherent;
-  it does not make that estimate correct or model an adaptive opponent.
+  exponential weighting, stable normalization. Virtual scores use the history
+  produced by the portfolio; an expert playing alone may face different responses.
+- Terminal: frequency response until the last 30 throws, then dynamic programming
+  with a fixed estimate of the opponent's distribution. It assumes that estimate
+  holds for the rest of the match, so try it against a changing opponent too.
 
 The full source checkout's `uv run pytest tests/test_workshop.py` checks the
 mathematical examples, update timing, lesson snippets, and legal 501-throw play.

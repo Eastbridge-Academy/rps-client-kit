@@ -1,10 +1,10 @@
-# Route D: compete with your models
+# Route D: combine several strategies
 
-Treat the match as a short online decision problem. You have a catalogue of plausible policies, none reliable everywhere, and only 501 observations before state resets. The useful question is not which policy sounds most sophisticated, but how to allocate trust while keeping the experiment interpretable.
+A frequency response, a Markov model and a Copycat response each work against different opponents. Suppose you keep all three running and adjust their weights as the match progresses. This route develops that idea using online learning, then looks at how the score near the end of a match can change your choice of move.
 
 ## Experiment 1: an expert portfolio
 
-Build a small set of policies that each return an **action distribution** over rock, paper and scissors. Include uniform play, a frequency response, a short-window response, order-one and order-two responses, and one or two reactive models. A deterministic recommendation is a one-hot distribution.
+Build a small set of policies, called **experts**, that each return a probability distribution over rock, paper and scissors. Include uniform play, frequency and short-window responses, order-one and order-two models, and a reactive rule or two. A deterministic expert puts probability one on its chosen move.
 
 Before throw $t$, expert $i$ proposes $p_{i,t}$. Give it weight $w_{i,t}$, normalize the weights, and sample your actual move from their weighted mixture. Store every proposed distribution before the opposing move is revealed.
 
@@ -14,19 +14,19 @@ After observing opposing move $b_t$, you can compute the one-step virtual gain o
 g_{i,t} = \sum_a p_{i,t}(a)\,\operatorname{payoff}(a,b_t).
 ```
 
-This is full-information feedback for the current realized opposing move; you are not limited to the payoff of the move you happened to sample. Score the stored proposals, then update their models for the next throw.
+RPS gives you **full-information feedback**: after seeing the opposing move, you can score every saved proposal, including those you didn't play. Score them first, then update their models for the next throw.
 
 An exponential update is $w_{i,t+1}=w_{i,t}\exp(\eta g_{i,t})$. Start with equal positive weights. Use log weights and subtract the maximum before exponentiating to keep normalization stable. Every gain lies in $[-1,1]$.
 
-> **Implementation check:** with only three fixed-action experts and one uniform expert, feed a written opposing sequence through the update. Compute one update by hand and verify that all weights remain finite, nonnegative and normalized after conversion to probabilities.
+> **First test:** use three fixed-action experts and one uniform expert. Feed them a short sequence you've written down and calculate the first weight update by hand. After normalization, check that the weights are finite, nonnegative and sum to one.
 
-The code needs only the standard library. Keep the pool small and the state explicit; 501 throws are not enough to identify dozens of nearly identical experts reliably.
+The standard library is enough for this implementation. Start with a few experts whose behavior you can follow, and add more once their updates work.
 
 **Reading:** Freund and Schapire, *A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting* (1997), DOI 10.1006/jcss.1997.1504. Arora, Hazan and Kale's 2012 survey develops the broader multiplicative-weights framework; its link is on the last page.
 ---page---
-# State the guarantee you mean
+# A regret bound
 
-For the undiscounted exponential update above, with $K$ experts and gains in $[-1,1]$, the usual potential argument gives a pathwise bound against the experts' gains on the **realized history**:
+For $K$ experts with gains in $[-1,1]$, the undiscounted exponential update gives the following bound. It holds on each realized history and compares the mixture's weighted gains with those of the best expert on that history:
 
 ```math
 \max_i\sum_{t=1}^{T}g_{i,t}
@@ -34,39 +34,39 @@ For the undiscounted exponential update above, with $K$ experts and gains in $[-
 \;\leq\; \frac{\log K}{\eta}+\frac{\eta T}{2}.
 ```
 
-Here $\alpha_{i,t}$ is the normalized weight. With $\eta=\sqrt{2\log K\,/\,T}$, the right side is $\sqrt{2T\log K}$. The mixture's conditional expected gain equals the weighted virtual gain when the opponent cannot see your current random draw. Actual sampled gains still fluctuate.
+Here $\alpha_{i,t}$ is the normalized weight. Setting $\eta=\sqrt{2\log K\,/\,T}$ makes the right side $\sqrt{2T\log K}$. If the opponent cannot see your current random draw, your conditional expected gain equals the weighted virtual gain. Your sampled moves will fluctuate around that expectation.
 
-## Experiment 2: what uniform contributes
+## Experiment 2: include a uniform expert
 
-A uniform expert has virtual gain exactly zero against every revealed opposing move. Including it makes the bound a useful comparison with the equilibrium baseline. For $K=8$ and $T=501$, the bound divided by $T$ is about $0.091$. This is a finite-horizon expectation statement for the sampled policy, not a promise of a nonnegative score in every match.
+A uniform expert has virtual gain zero against every opposing move. Including it ensures that the best expert's cumulative virtual gain is at least zero. With $K=8$ and $T=501$, the bound allows a shortfall of about $0.091$ per throw. This comparison applies in expectation to the sampled policy; individual matches can finish below it.
 
-Derive the displayed bound yourself by comparing the final log sum of weights with the weight of one expert, and bounding each log moment-generating function for a variable in $[-1,1]$. Be explicit about where the range of the gain enters the constant.
+Derive the bound by comparing the final log sum of weights with the weight of one expert. You'll need to bound each log moment-generating function for a variable in $[-1,1]$. Where does that range enter the constant?
 
-## The counterfactual trap
+## Playing each expert separately
 
-Against an adaptive opponent, an expert's virtual gain is not the score it would necessarily have earned by controlling the **entire match**. Different past actions could have trained the opponent differently. The comparator uses proposals on the history that actually occurred, not a hypothetical alternative trajectory.
+An expert's virtual gains are calculated on the history your portfolio produced. If that expert had played the entire match, it could have produced a different history and caused an adaptive opponent to respond differently. The bound compares experts on the shared, realized history.
 
-This distinction matters against Cycle Counter, Markov and Adaptive Ensemble. Record both the portfolio's result and separate fresh matches played by each expert alone. A discrepancy is not automatically a bug in the weighting rule.
+Try this against Cycle Counter, Markov and Adaptive Ensemble. Record the portfolio's result, then let each expert play fresh matches alone. How do those scores compare with its virtual gains inside the portfolio?
 
-> **Checkpoint:** write three distinct claims: the pathwise bound on virtual gains, the expectation statement for your sampled moves, and a high-probability statement you have *not* proved. Do not replace one with another when reporting results.
+> **Derivation check:** identify the pathwise inequality and the expectation statement in your argument. What additional argument would you need to bound the probability of a large loss from sampling?
 
-**Optional extension:** add discounting to react faster to regime changes. The standard undiscounted bound above no longer applies unchanged. Label the discounted version as a separate empirical experiment and compare it against Shifting Bias.
+**Optional extension:** discount old gains and compare the result against Shifting Bias. The derivation above uses undiscounted sums; work out which steps would need to change for the discounted version.
 ---page---
-# Spend an exploitation budget
+# Mixing with uniform play
 
-Suppose you want an explicit bound on how far a prediction-driven policy can move from the uniform baseline. Let $u$ be uniform and $r$ be any learned action distribution. Play:
+You can limit how much a learned policy affects your moves by mixing it with uniform play. Let $u$ be uniform and $r$ be your learned action distribution, and choose from:
 
 ```math
 p=(1-\rho)u+\rho r, \qquad 0\leq\rho\leq1.
 ```
 
-For a non-anticipating opponent, uniform contributes zero conditional expected payoff and $r$ contributes at least $-1$. Therefore $p$'s conditional expected payoff is at least $-\rho$ on each throw. This bound is deliberately crude, but its assumptions and meaning are clear.
+Against an opponent that cannot see your current random draw, uniform play has conditional expected payoff zero and $r$ has payoff at least $-1$. The mixture therefore has conditional expected payoff at least $-\rho$ on each throw.
 
-## Experiment 3: pay for confidence
+## Experiment 3: vary the mixture
 
-Compare $\rho$ values $0$, $0.25$, $0.5$ and $1$ while holding the learned policy fixed. Against a predictable bot, a small $\rho$ gives up some available advantage. Against a model that is confidently wrong, it limits the expected loss relative to an unrestricted deterministic reply.
+Compare $\rho$ values $0$, $0.25$, $0.5$ and $1$ while holding the learned policy fixed. Smaller values give up some advantage when your model is right and reduce expected losses when it is wrong.
 
-A confidence-triggered $\rho$ is a further experiment. You might use the sample count in the current context or a validation score from stored predictions. Neither turns a correlated, adapting opponent into independent data. Avoid advertising a confidence bound whose sampling assumptions the match violates.
+You could also choose $\rho$ using the sample count in the current context or the scores of stored predictions. Test that choice against an adaptive opponent. If you attach a statistical confidence bound, check that its assumptions allow dependence between observations.
 
 | Variant | Stationary bias | Changing bias | Adaptive learner | Uniform |
 | --- | --- | --- | --- | --- |
@@ -75,15 +75,15 @@ A confidence-triggered $\rho$ is a further experiment. You might use the sample 
 | Portfolio mixed with uniform |  |  |  |  |
 | Discounted portfolio |  |  |  |  |
 
-Use a fresh group of seeds for this comparison. Keep model state separate from the sampling RNG and reset both in setup. If you log predictions, verify that scoring a proposal never changes the action it would have recommended before the observed move.
+Use fresh seeds for this comparison. Keep model state separate from the sampling RNG and reset both in setup. The logged proposal used for scoring should be exactly the one saved before the opposing move arrived.
 
-> **Challenge:** construct an opponent that changes behavior in response to your policy, then explain which parts of your evaluation remain valid and which would require a model of that response. Do not use hidden current moves, shared PRNG reconstruction or server side channels as the "prediction."
+> **Challenge:** write an opponent that changes behavior in response to your past moves. Compare virtual expert gains with complete matches played by each expert. Can you produce a large difference between the two?
 
-The tournament rewards winning fixed series against a mixed field. A low-regret per-throw policy is an interesting baseline, but the event's terminal objective creates another decision problem.
+So far we've optimized payoff per throw. The arena awards a match win for finishing ahead, which gives us another objective to consider.
 ---page---
-# Optimize the series, not just the mean
+# Choosing a move near the end
 
-Suppose you know a stationary opposing distribution $q$. With one throw left and a one-point lead, you may prefer a reply that avoids losing to one with a larger expected net payoff but a larger loss probability. With a deficit, the preference can reverse.
+Suppose the opponent draws independently from a known, fixed distribution $q$. With one throw left and a one-point lead, a draw is enough to win the match. If you're one point behind, you need a win just to tie. We'll calculate how the score changes the best reply.
 
 ## Experiment 4: a finite-horizon controller
 
@@ -107,24 +107,24 @@ V(n,d)=\max_a\bigl[\,&W(a)\,V(n-1,d+1)\\
 \end{aligned}
 ```
 
-For a fixed known $q$, the maximum of this linear expression occurs at a pure action, except for ties. Mixed actions can still be useful once uncertainty and an adaptive opponent are part of the problem; those are additional assumptions, not features already represented by this recursion.
+For a fixed known $q$, this expression is linear in the probabilities of your moves, so a pure action attains the maximum. Ties allow mixtures too. Modeling uncertainty about $q$ or an opponent that adapts to you would require extending the state and transition model.
 
-Start with only the final **30 throws**. Precompute a small table or memoize the state; do not recompute a full 501-throw dynamic program on every move. From histories, $d$ is your number of wins minus losses, and the number of throws remaining includes the choice you are about to make.
+Implement this for the final **30 throws**, using a precomputed table or memoized states. A full 501-throw dynamic program on every call would do much more work. Calculate $d$ as your wins minus losses; the remaining-throw count includes the move you're choosing now.
 
-## A hand-checkable example
+## One throw left
 
 Take $q$ = 30% rock, 60% paper, 10% scissors. The net-payoff maximizer is scissors ($+0.30$); paper earns $+0.20$. With one throw left and $d=0$, scissors also has the largest expected terminal points: $0.60+0.5\cdot0.10=0.65$. But with $d=1$:
 
 - Paper loses with probability $0.10$, so its expected match points are $1-0.5\cdot0.10=0.95$.
 - Scissors loses with probability 0.30, so its expected match points are 0.85.
 
-Paper is now better for the match objective. Verify all three choices, then find what changes at $d=-1$. This is a calculation about the objective, not a conclusion from one anecdotal match.
+With that one-point lead, paper earns more expected match points. Calculate the result for rock as well, then repeat all three calculations with $d=-1$.
 
-> **Checkpoint:** test the terminal conditions and one-step recursion by hand. Then compare the controller with a per-throw best response against a fixed synthetic distribution before using estimated $q$ from a real opponent.
+> **Test the controller:** check its terminal values and one-step choices against your calculations. Then play it against a fixed synthetic distribution and compare with a bot that maximizes payoff per throw. Once that works, try estimating $q$ from the match history.
 ---page---
-# An experiment worth presenting
+# Choose an experiment
 
-Choose one question you can answer within the session. A small, honest result is more informative than a large portfolio of untested claims.
+Choose one of the questions below, or use a result from your earlier matches that you'd like to investigate. Leave time to run several seeds and save the version you tested.
 
 ## Three possible investigations
 
@@ -142,11 +142,11 @@ rps-cli play --against double_take,markov,adaptive_ensemble \
 rps-cli package --output reviewed-bot.zip
 ```
 
-Keep the kit version, bot source, selected opponents, series length and seed range with the results. Use independent matches as your experimental units. Match outcomes and mean throw payoff should both be visible, and zero errors should be established before interpreting strategy quality.
+Save the kit version, bot source, opponents, series length and seed range with the results. Report match outcomes and mean payoff per throw, using independent matches as your experimental units. If any runs have errors, fix those and rerun the comparison.
 
-Check numerical stability, empty contexts, repeated setup, tie-breaking and the timing of every prediction update. On a Raspberry Pi, a tiny standard-library model that returns promptly is more useful for this event than a large model whose startup or move computation times out.
+Before submitting, check weight normalization, empty contexts, repeated setup, tie-breaking and prediction timing. Run the bot on a lab machine too; its startup and move calculations need to fit the arena's time limits.
 
-> **Finish:** submit a tested version, confirm it is active, and give another participant a concise account of one assumption, one measured result and one limitation. Leave them enough detail to rerun the experiment.
+> **Finish:** submit your tested version and confirm that it's active. Show another participant the comparison you ran. Include the settings and source so they can try it themselves.
 
 ## Further reading
 
@@ -154,4 +154,4 @@ Check numerical stability, empty contexts, repeated setup, tie-breaking and the 
 - Freund and Schapire (1997), *A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting*. Journal of Computer and System Sciences 55, 119-139. https://doi.org/10.1006/jcss.1997.1504
 - Yale Open Courses, ECON 159, Lecture 8, mixed strategies and rock-paper-scissors. https://oyc.yale.edu/economics/econ-159/lecture-8
 
-The handout's RPS payoff calculations and finite-horizon experiments can be checked directly from the three-by-three payoff table. The online-learning references supply the broader framework; no claim here implies a reliable exploit of independent uniform random play.
+The first two references develop the online-learning results used in this route. The Yale lecture covers mixed strategies and the RPS equilibrium introduced in the shared pages.

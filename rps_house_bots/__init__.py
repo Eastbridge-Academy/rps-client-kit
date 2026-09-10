@@ -10,22 +10,22 @@ _BOTS_PACKAGE = "rps_house_bots.bots"
 
 # One catalogue feeds the CLI, event field guide and server seeding metadata.
 _PROFILES = {
-    "rocky": ("Beginner", "Always rock.", "Play paper; check that it wins every throw."),
-    "cycle_rps": ("Beginner", "Rock, paper, scissors, then repeat.", "Predict the next item in the cycle, not the last one."),
-    "copycat": ("Beginner", "Copies your previous throw after a random opening.", "Its next move is your last move. Counter your own history."),
+    "rocky": ("Beginner", "Always plays rock.", "Play paper. You should win every throw."),
+    "cycle_rps": ("Beginner", "Plays rock, paper, scissors, then repeats.", "Work out the next move in the cycle and play the move that beats it."),
+    "copycat": ("Beginner", "Copies your previous throw after a random opening.", "If you last played rock, it will play rock next. Use your own history to choose a reply."),
     "echo_two": ("Beginner", "Copies your throw from two turns ago.", "Use my_history[-2] once two throws have finished."),
-    "contrarian": ("Intermediate", "Counters your previous throw after a random opening.", "Predict its counter to your last move, then counter that prediction."),
-    "switcheroo": ("Intermediate", "Rock before the halfway point, scissors afterwards.", "A short recent window notices the switch; all-history counts react slowly."),
+    "contrarian": ("Intermediate", "Plays the move that beats your previous throw, after a random opening.", "If you last played rock, expect paper and reply with scissors."),
+    "switcheroo": ("Intermediate", "Plays rock for the first half of the match and scissors afterwards.", "Compare counts over the last 30 throws with counts over the whole match."),
     "biased_random": ("Intermediate", "Independent throws: 60% rock, 25% paper, 15% scissors.", "Paper has expected net payoff +0.45 per throw."),
-    "shifting_bias": ("Intermediate", "Every 50 throws, a new favorite gets probability 70%.", "Try a recent window or discounted counts; compare the delay after each switch."),
-    "sticky": ("Intermediate", "80% repeat, 10% each alternative; balanced in the long run.", "Counter its last move. Balanced totals do not imply unpredictable next moves."),
-    "win_stay_lose_shift": ("Intermediate", "Repeats after wins/draws; randomly switches after losses.", "After it wins/draws, counter its last move. After it loses, play the move its last move beats."),
+    "shifting_bias": ("Intermediate", "Changes its favorite move every 50 throws, choosing it 70% of the time.", "Try a recent window or discount old counts. How long does your bot take to notice a switch?"),
+    "sticky": ("Intermediate", "Repeats its last move 80% of the time; each alternative has probability 10%.", "Counter its last move. Compare that with a bot that uses only total move counts."),
+    "win_stay_lose_shift": ("Intermediate", "Repeats after a win or draw. After a loss, chooses either other move with equal probability.", "After it wins or draws, counter its last move. After it loses, play the move its last move beats."),
     "cycle_counter": ("Advanced", "Counters your most common move over the last ten throws.", "Model its sliding window, including the tie-break from the earliest tied occurrence."),
-    "markov": ("Advanced", "Learns what follows your last move and counters that prediction.", "Predict its table from your own history, or remove first-order dependencies."),
-    "double_take": ("Advanced", "Nine-throw cycle with balanced single moves and adjacent pairs.", "Try a two-move context; first-order statistics alone miss its deterministic continuation."),
-    "sequence_hunter": ("Expert", "Looks for repeated suffixes of length 2-5 in the last 150 throws.", "Use longer-memory tests and independent random exploration; inspect where its predictions fail."),
-    "adaptive_ensemble": ("Expert", "Tracks decaying accuracy of repeat, frequency, cycle and reactive predictors.", "Regime changes and mixed policies stress its model selection; measure across fresh seeds."),
-    "random_uniform": ("Baseline", "Independent uniform pseudorandom throws.", "A calibration opponent. Do not mistake one lucky series for a reliable exploit."),
+    "markov": ("Advanced", "Learns what follows your last move and counters that prediction.", "Reconstruct its counts from your own history, or balance what follows each of your moves."),
+    "double_take": ("Advanced", "Repeats a nine-throw cycle. Each move and each adjacent pair appears equally often.", "Record what follows each pair of moves. Compare this with a table using only the last move."),
+    "sequence_hunter": ("Expert", "Looks for earlier occurrences of your last 2-5 moves within your last 150 throws.", "Try a sequence where the same five-move ending has different successors. Which does it predict?"),
+    "adaptive_ensemble": ("Expert", "Chooses among repeat, frequency, cycle and reactive predictors using their recent accuracy.", "Change your rule partway through a match and measure how long it takes to catch up."),
+    "random_uniform": ("Baseline", "Chooses each move independently with equal probability, using a seeded generator.", "Use several seeds to see how much scores vary against random play."),
 }
 
 

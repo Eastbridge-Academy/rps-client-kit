@@ -1,16 +1,16 @@
-# Run the room
+# Running the workshop
 
-This is a two-hour public event, not a shortened three-month chess course. Get a legal bot into the arena early, then give participants room to explore at a comfortable level. The four packages share the same mechanics and installation pages; nobody needs to complete an earlier route before choosing a later one.
+Plan to have everyone's starter bot in the arena during the first 20 minutes. Participants can then work through whichever route suits them. All four packets include the same setup and mechanics pages, so people can start anywhere and switch during the session.
 
 ## Before participants arrive
 
-Give each lab account an extracted **rps-event-kit** folder in its home directory. Test the included start.sh with the actual Raspberry Pi OS image, Python 3.11+ and uv. The wheelhouse supports offline package installation; local practice is offline too. Live submissions and the dashboard still need the event network and arena.
+Put an extracted **rps-event-kit** folder in each lab account's home directory. Try start.sh on the Raspberry Pi image participants will use, with Python 3.11+ and uv installed. Setup and local practice work offline. Check the event network as well, since submissions and the dashboard need it.
 
-Prepare the event's server URL, active RPS league slug and submit token. The printed `rps` slug and `TOKEN` are examples, not embedded credentials. Confirm the intended server is deployed with the matching kit/worker contract before distributing a token. The currently running dev rehearsal is not automatically the public event.
+Have the event's server URL, active RPS league slug and submit token ready to distribute. Participants will substitute these for the examples in the handouts. Confirm which server will host the event and test a submission from the supplied kit; the dev rehearsal may be running on a different server.
 
-Print one selected route per participant, plus the two-page house-bot field guide if you want hints available. Start with a few copies of each route and let people switch. Keep the field guide optional for participants who want to infer personalities without reading their rules.
+Print a few copies of each route, with more copies of whichever levels you expect to need. Offer the two-page house-bot guide as hints. Some participants may prefer to work out the bots' rules themselves.
 
-## A workable schedule
+## Suggested schedule
 
 | Minutes | What happens |
 | --- | --- |
@@ -18,19 +18,19 @@ Print one selected route per participant, plus the two-page house-bot field guid
 | 10-20 | Initialize, test and submit the random starter; confirm an active version. |
 | 20-45 | First route exercise and a small local comparison. |
 | 45-75 | Add one model or improvement; circulate and debug histories. |
-| 75-95 | Cross-test against other house personalities; compare notes in pairs. |
-| 95-110 | Freeze a candidate and test on fresh seeds. |
+| 75-95 | Try other house bots and compare notes in pairs. |
+| 95-110 | Save a final version and test it on fresh seeds. |
 | 110-120 | Submit, confirm activation, watch results and share one finding. |
 
-Offer help with setup before discussing strategy. Pair a Python newcomer with someone comfortable reading tracebacks if both are happy with that arrangement. A participant who only builds a reliable Rocky counter can still explain a prediction and a response; they need not rush into a Markov model.
+Spend the opening part of the session helping people get set up. Pairing newcomers with someone who can read a traceback can help, if both people would like that. Let participants finish the exercise they're working on even if others have moved ahead.
 
 > **Opening demonstration:** show constant rock losing to paper, then show a balanced repeating cycle being exploited. Ask whether "one third of each move" was enough to make the second bot unpredictable. Follow with the independent-uniform baseline and its expected zero net payoff.
 ---page---
-# Check the event path
+# Testing the lab setup
 
-The kit, handouts and bundle have separate jobs. The wheel supplies the CLI and SDK. The PDFs guide the workshop. The bundle pins the reviewed wheel and its dependencies so a package-index outage does not consume the session.
+The event ZIP contains the kit, its dependencies and the printable handouts. Run through the setup from that ZIP before copying it to the lab accounts. This checks that participants have everything they'll need, including for offline practice.
 
-## Lab smoke run
+## Try a participant project
 
 On the same image participants will use:
 
@@ -46,11 +46,11 @@ rps-cli play --against rocky,sticky,double_take --best-of 501
 rps-cli package --output smoke.zip
 ```
 
-Use the actual event settings with `config set`, then run `doctor`. Complete one designated smoke submission before opening the event, verify that its version becomes active, and inspect a finished match. Use the organizer controls to remove that designated smoke bot if it should not enter the field.
+Set the event URL, league and token with `config set`, then run `doctor`. Submit a test bot, wait for its version to become active, and inspect a completed match. Afterwards, remove that test entry through the organizer controls if it won't be playing in the event.
 
-The doctor checks reachability and the active RPS league; a configured token is not authenticated until submission. Keep the submit token out of printed packets and source control. Participants should work in their own project folders because `.rps-cli.json` is project-local.
+The doctor checks the connection and active RPS league; submission also checks the token. Distribute the token separately from these handouts and keep it out of source control. Each participant should use their own project folder, where `.rps-cli.json` stores their settings.
 
-## Common interruptions
+## Troubleshooting
 
 | Symptom | First check |
 | --- | --- |
@@ -58,38 +58,38 @@ The doctor checks reachability and the active RPS league; a configured token is 
 | Move import fails in the editor | Select the project's .venv interpreter; run the CLI from that environment. |
 | IndexError on the first throw | Guard empty history before [-1], and two entries before [-2]. |
 | Works first match, fails later | Reset globals in setup; avoid counting all old transitions again. |
-| No active RPS league | Check server and slug with doctor; do not guess a flat API route. |
+| No active RPS league | Check the server URL and league slug with doctor. |
 | Upload queued or rejected | Read status; it reports both active and latest versions. |
-| Local success, server failure | Check startup/per-throw cost and imported dependencies; the whole venv is not shipped. |
+| Local success, server failure | Check startup and move times, then any imports beyond the standard library and SDK. |
 | Wrong bot on the scoreboard | Reuse the exact team name and verify the displayed active version. |
 
-Local practice has a whole-match deadline, while the arena enforces move budgets. A bot can finish within the local total limit while one individual server call is too slow. Keep the standard-library examples small and run the designated server smoke check.
+Local practice limits the total match time; the arena also limits each move. A bot can pass locally and still take too long on one server call. If that happens, time its startup and individual moves to find the slow part.
 
 ---page---
 # Hints, answers and discussion
 
-The house guide is generated from the kit's catalogue so the descriptions agree with the shipped personalities. Suggested routes are teaching groupings, not a total ordering of competitive strength. A specialized weak bot can expose a sophisticated bot's assumption.
+The house guide describes the bots included in the kit. Its route labels show where each bot appears in the exercises. Matchups will often cut across those levels: a simple strategy can beat a complicated one that predicts it poorly.
 
-## Small answers worth checking by hand
+## Answers to the exercises
 
 - **Rocky:** paper wins every throw. Against Cycle RPS, predict the next item, then counter it; countering the previous item is late.
 - **Copycat:** its next move is your last move. **Echo Two:** use your move two turns ago. Guard the first one or two calls respectively.
 - **Contrarian:** predict its counter to your last move, then counter that prediction.
 - **Sticky:** counter its previous move. Its conditional repeat probability is 0.8 even though long-run single-move frequencies are balanced.
 - **Win Stay Lose Shift:** after its win or draw, counter its last move. After its loss, play the move its last move beats; this wins against one possible switch and draws against the other.
-- **40/21/39 distribution:** rock earns +0.18, paper +0.01 and scissors -0.19. A reply to the most frequent move is not automatically the best payoff response.
+- **40/21/39 distribution:** rock earns +0.18, paper +0.01 and scissors -0.19. Rock wins against the plentiful scissors and loses only to the relatively scarce paper.
 - **Double Take:** its cyclic adjacent pairs are RR, RP, PR, RS, SP, PP, PS, SS and SR. Each identifies one deterministic successor. Single-move conditional rows are balanced over complete cycles.
 
 ## Questions for more experienced participants
 
-A stored prediction must be evaluated before it learns the newly observed throw. Ask them to change a future item in a written sequence and show that earlier predictions stay unchanged.
+To check prediction timing, ask participants to change a later item in a written sequence. Earlier predictions should stay the same. The saved prediction must be scored before the model learns from the newly observed throw.
 
-For a portfolio, distinguish virtual one-step gains on the actual history from the outcomes of experts that play their own complete matches. Adaptive opponents make those different counterfactuals. Discounting may help with changing behavior, but it changes the regret analysis.
+For a portfolio, compare each expert's virtual gains with its score in a match played alone. Against an adaptive opponent, its own past moves can change the opposition it faces. If a participant adds discounting, ask where the undiscounted regret proof would need to change.
 
-For a terminal-objective example, use q = 30% rock, 60% paper, 10% scissors. A per-throw response chooses scissors (+0.30 rather than paper's +0.20). With one throw left and a one-point lead, paper yields expected match points 0.95, while scissors yields 0.85. The optimal objective really matters.
+For the end-of-match example, use $q$ = 30% rock, 60% paper, 10% scissors. Scissors has expected payoff $+0.30$ per throw and paper has $+0.20$. With one throw left and a one-point lead, paper earns expected match points $0.95$, while scissors earns $0.85$. Ask participants to calculate the choices when they're one point behind.
 
-## End with a claim that fits the evidence
+## Closing discussion
 
-Ask each participant for one assumption, one measured result on fresh seeds and one limitation. Neither a leaderboard rank nor one lucky match establishes a universal strategy. Perfect independent uniform play remains the unexploitable theoretical baseline; the workshop's learning opportunities come from the personalities and dependencies of actual opponents.
+Ask participants to show a match or experiment that surprised them. Have them explain what their bot was predicting and whether they changed it afterwards. Return to the opening random-play example: which opponents had a habit they could learn, and what happened against Random Uniform?
 
-The source repository contains facilitator reference bots and tests for the lesson mechanics. They are comparison tools, not required starting code or guaranteed tournament winners. Let participants explain and modify them if you choose to share them.
+The source repository includes reference bots and tests for the exercises. You can share them for participants to inspect, modify or compare with their own work. The README beside them explains how to run each one.

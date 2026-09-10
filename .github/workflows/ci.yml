@@ -8,17 +8,44 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - name: Sync
-        run: uv sync --dev
+        run: uv sync --locked --python '${{ matrix.python-version }}'
+      - name: Lint
+        run: uv run ruff check
       - name: Test
         run: uv run pytest
       - name: Build
         run: uv build
 
+  workshop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v5
+      - name: Build printable and offline materials
+        run: |
+          uv sync --locked --python 3.11 --group workshop
+          uv run --group workshop python workshop/build_handouts.py
+          uv build
+          uv run python workshop/build_bundle.py
+      - name: Exercise offline setup and participant commands
+        run: sh workshop/smoke_bundle.sh output/rps-event-kit
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rps-workshop-review
+          path: |
+            output/pdf/*.pdf
+            output/rps-event-kit.zip

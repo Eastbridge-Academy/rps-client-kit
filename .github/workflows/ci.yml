@@ -62,3 +62,35 @@ jobs:
           path: |
             output/pdf/*.pdf
             output/rps-event-kit.zip
+
+  windows-event-kit:
+    needs: workshop
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: rps-workshop-review
+          path: workshop/tmp/artifact
+      - name: Install the extracted event ZIP using the handout commands
+        shell: pwsh
+        env:
+          UV_OFFLINE: "1"
+          UV_PYTHON_DOWNLOADS: never
+        run: |
+          Expand-Archive workshop/tmp/artifact/rps-event-kit.zip -DestinationPath "$env:RUNNER_TEMP/event kit"
+          Set-Location "$env:RUNNER_TEMP/event kit/rps-event-kit"
+          $RpsProject = "$env:RUNNER_TEMP/bot project with spaces"
+          uv venv --offline --python 3.12 "$RpsProject/.venv"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          uv pip install --offline --no-index `
+            --python "$RpsProject/.venv/Scripts/python.exe" `
+            --find-links ./wheelhouse -r ./requirements.txt
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Set-Location $RpsProject
+          & "$RpsProject/.venv/Scripts/python.exe" -c "import os, pathlib, sys; sys.path.insert(0, os.environ['GITHUB_WORKSPACE'] + '/workshop'); from smoke_install import exercise; p = pathlib.Path.cwd(); exercise(p / '.venv/Scripts/rps-cli.exe', p, dict(os.environ))"
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }

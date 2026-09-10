@@ -38,7 +38,7 @@ def test_version_and_help_work_even_with_broken_project_config(tmp_path, monkeyp
     assert runner.invoke(app, ["--help"]).exit_code == 0
     version = runner.invoke(app, ["--version"])
     assert version.exit_code == 0
-    assert "0.3.0" in version.stdout
+    assert "0.3.1" in version.stdout
     result = runner.invoke(app, ["info"])
     assert result.exit_code != 0
     # Rich may colour individual words and wrap the error panel on Windows.

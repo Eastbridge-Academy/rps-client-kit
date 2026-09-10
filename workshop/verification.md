@@ -1,5 +1,30 @@
 # Event-kit verification, September 10, 2026
 
+## Version 0.3.1: handouts and personal laptops
+
+- All seven native LaTeX handouts compile with zero box or missing-glyph
+  warnings. All **33 pages** were rendered and visually reviewed, including
+  Windows commands, two-digit listing numbers and the expert mathematics.
+- Setup and practice are now a separate four-page handout. Level packets are
+  5, 6, 6 and 7 pages and begin with theory and bot mechanics. The house guide
+  remains two landscape pages; facilitator notes take three pages.
+- macOS ARM64: **70 tests pass**, Ruff passes, and fresh project and uv-tool
+  installs exercise validation, 3,006 recorded practice throws, packaging and
+  preserved edits. The beginner test executes its actual native LaTeX listing.
+- The event ZIP includes seven PDFs and 21 portable wheels. Offline setup,
+  manifest hashes, 1,503 recorded throws, extracted submission validation,
+  paths containing spaces and preservation of participant edits pass locally.
+- CI also builds the PDFs and ZIP on Linux and tests the extracted ZIP on
+  Windows with the handout's PowerShell installation commands. The Windows
+  check invokes the executable directly, without script activation.
+- This release changes documentation and distribution; bot and SDK behavior
+  remain as in 0.3.0. The physical Raspberry Pi lab-image check still applies.
+
+The sections below retain the earlier 0.3.0 rehearsal evidence. Server state
+and remaining deployment tasks there describe that rehearsal, not current prod.
+
+## Version 0.3.0 rehearsal record
+
 This record covers version 0.3.0. GitHub builds the release assets from the
 version tag and records the source commit and file hashes in each event
 bundle's BUILD.json.

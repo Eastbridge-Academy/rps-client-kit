@@ -100,7 +100,10 @@ def doctor() -> None:
         else:
             typer.echo(f"Server reachable; {league['name']} is active.")
     except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
-        problems.append(f"Could not check the server ({type(exc).__name__}). Check api_url and your connection.")
+        if "CERTIFICATE_VERIFY_FAILED" in str(exc):
+            problems.append("The server certificate is not trusted by Python. Confirm the event URL; for a local development server, ask the facilitator for its CA certificate and set SSL_CERT_FILE to that PEM file.")
+        else:
+            problems.append(f"Could not check the server ({type(exc).__name__}: {exc}). Check api_url and your connection.")
     for problem in problems:
         typer.echo(problem, err=True)
     if problems:

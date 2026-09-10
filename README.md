@@ -160,6 +160,15 @@ missing tests and the README, so existing bot folders can adopt the new workflow
 
 ## Releases
 
+The [two-hour workshop](workshop/README.md) includes four printable routes,
+the house-bot field guide, facilitator reference bots, and offline bundle builds.
+Choose a route directly; each repeats the same setup and mechanics foundations.
+
+For a local development server that uses a private CA, Python may not trust the
+certificate even when the browser does. Set `SSL_CERT_FILE` to the facilitator's
+trusted CA PEM file. This applies to doctor, submit and status; production should
+use its normal publicly trusted certificate. No certificate bypass is required.
+
 Tags trigger the repository's GitHub Actions wheel/source release build. The
 organizer reviews and publishes a tested tag; local build scripts also produce
 an event bundle so the workshop can use the exact reviewed version offline.

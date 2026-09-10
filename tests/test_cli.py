@@ -72,3 +72,35 @@ def test_opponent_catalogue_includes_hints():
     assert result.exit_code == 0, result.output
     assert "double_take" in result.stdout
     assert "echo_two" in result.stdout
+
+
+def test_doctor_checks_the_selected_active_rps_league(tmp_path, monkeypatch):
+    import httpx
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("RPS_SUBMIT_TOKEN", "configured")
+    monkeypatch.setenv("RPS_LEAGUE", "workshop")
+    (tmp_path / "bot.py").write_text("def next_move(*args): return 'rock'\n")
+    def get(url, **kwargs):
+        data = [{"slug": "workshop", "name": "Workshop", "game_type": "rps", "is_active": True}] if url.endswith("/leagues") else {"status": "ok"}
+        return httpx.Response(200, json=data, request=httpx.Request("GET", url))
+    monkeypatch.setattr("rps_client.cli.httpx.get", get)
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 0, result.output
+    assert "Workshop is active" in result.output
+    assert "validates the token when you submit" in result.output
+    monkeypatch.setenv("RPS_LEAGUE", "wrong-slug")
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 1
+    assert "Available: workshop" in result.output
+
+
+def test_doctor_explains_untrusted_development_certificates(tmp_path, monkeypatch):
+    import httpx
+    monkeypatch.chdir(tmp_path)
+    def get(*args, **kwargs):
+        raise httpx.ConnectError("[SSL: CERTIFICATE_VERIFY_FAILED] unable to get local issuer")
+    monkeypatch.setattr("rps_client.cli.httpx.get", get)
+    result = runner.invoke(app, ["doctor"])
+    assert result.exit_code == 1
+    assert "SSL_CERT_FILE" in result.output
+    assert "Traceback" not in result.output

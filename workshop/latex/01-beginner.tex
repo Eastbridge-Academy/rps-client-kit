@@ -59,7 +59,7 @@ Try \code{return COUNTER[Move.ROCK]} and run the Rocky match again. You should g
 \textbf{Check:} what do \code{COUNTER[Move.PAPER]} and \code{COUNTER[Move.SCISSORS]} return? Run each against Rocky. Can you account for the scores?
 \end{checkpoint}
 
-\textbf{Next opponent:} \code{cycle\_rps} repeats rock, paper, scissors. Write its first six moves and a winning reply under each one. How would your paper-only bot do?
+\textbf{Next opponent:} \code{cycle\_rps} repeats \throws{RPS} over and over. Write its first six moves and a winning reply under each one. How would your paper-only bot do?
 \par
 \clearpage
 \section*{Predict the next move}
@@ -105,11 +105,11 @@ Change the prediction line to use \code{my\_history}. Keep the opening branch, s
 \renewcommand{\arraystretch}{1.17}
 \begin{tabularx}{\linewidth}{@{}L{.25\linewidth}YYY@{}}
 \toprule
-\textbf{Completed throw} & \textbf{You played} & \textbf{Copycat played} & \textbf{What will Copycat play next?} \\
+\colhead{Completed throw} & \colhead{You played} & \colhead{Copycat played} & \colhead{What will Copycat play next?} \\
 \midrule
-\rule{0pt}{22pt}1 & Rock & Scissors &  \\
-\rule{0pt}{22pt}2 & Paper & Rock &  \\
-\rule{0pt}{22pt}3 & Scissors & Paper &  \\
+\rule{0pt}{22pt}1 & \tR\ Rock & \tS\ Scissors &  \\
+\rule{0pt}{22pt}2 & \tP\ Paper & \tR\ Rock &  \\
+\rule{0pt}{22pt}3 & \tS\ Scissors & \tP\ Paper &  \\
 \bottomrule
 \end{tabularx}\endgroup\par\smallskip
 
@@ -161,7 +161,7 @@ Describe each version in a notebook: \enquote{paper only} or \enquote{cycle dete
 \renewcommand{\arraystretch}{1.17}
 \begin{tabularx}{\linewidth}{@{}L{.25\linewidth}YYY@{}}
 \toprule
-\textbf{Version} & \textbf{Opponent and seed} & \textbf{Throws W-L-D} & \textbf{What did you learn?} \\
+\colhead{Version} & \colhead{Opponent and seed} & \colhead{Throws W-L-D} & \colhead{What did you learn?} \\
 \midrule
 \rule{0pt}{22pt}First working bot &  &  &  \\
 \rule{0pt}{22pt}One predictor &  &  &  \\

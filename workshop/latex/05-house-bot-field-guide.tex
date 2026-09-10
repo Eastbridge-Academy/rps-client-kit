@@ -1,52 +1,137 @@
-\documentclass[11pt,landscape]{article}
+\documentclass[11pt]{article}
 \newcommand{\routelabel}{House bot field guide}
 \usepackage{eastbridge-handout}
-\geometry{landscape,left=.75in,right=.75in,top=1in,bottom=.75in}
+\geometry{left=.65in,right=.65in,top=.85in,bottom=.6in,headheight=20pt,headsep=12pt,footskip=22pt}
 \setlength{\headwidth}{\textwidth}
 \hypersetup{pdftitle={RPS Workshop: House bot field guide}}
+
+% Sequence rows for the reference table.
+\newcommand{\seq}[2]{\makebox[2.3em][l]{\scriptsize\bfseries\color{black!45}\MakeUppercase{#1}}\throws{#2}}
+\newcommand{\then}{\hspace{6pt}{\color{black!45}\large$\rightarrow$}\hspace{8pt}}
+\newcommand{\note}[1]{\hspace{7pt}{\footnotesize\itshape\color{black!55}#1}}
+\newcommand{\demo}[1]{\rowcolor{black!4}[3pt]\multicolumn{3}{@{}l@{}}{\rule[-4.5pt]{0pt}{17.5pt}#1}\\}
+
+% Tier bands and rows for the reference table.
+\colorlet{mygray}{black!65}
+\newcommand{\tierband}[3]{%
+  \noalign{\vskip 3pt}\rowcolor{#1!10}[3pt]\multicolumn{3}{@{}l@{}}{%
+    \hspace{-3pt}{\color{#1}\rule[-5pt]{3pt}{17pt}}\hspace{5pt}%
+    \textbf{\color{#1}#2}\quad{\footnotesize\color{black!55}#3}}\\\noalign{\vskip 3pt}}
+\newcommand{\botrow}[2]{\textbf{#1}\newline{\footnotesize\ttfamily\color{black!55}#2}}
+\newcommand{\hairline}{\arrayrulecolor{black!15}\specialrule{.3pt}{2.5pt}{2.5pt}\arrayrulecolor{black}}
+\newcommand{\tablehead}{\colhead{Bot}&\colhead{What it does}&\colhead{Try this}\\\arrayrulecolor{black!40}\specialrule{.5pt}{2pt}{2pt}\arrayrulecolor{black}}
+\newcommand{\tablefoot}{\arrayrulecolor{black!40}\specialrule{.5pt}{3pt}{0pt}\arrayrulecolor{black}}
+\newenvironment{bottable}{%
+  \begingroup\small\setlength{\tabcolsep}{6pt}\renewcommand{\arraystretch}{1.1}%
+  \tabularx{\linewidth}{@{}L{1.5in}>{\hsize=.92\hsize}Y>{\hsize=1.08\hsize}Y@{}}}%
+  {\endtabularx\endgroup}
+\newcommand{\legend}{{\small\tR\,rock\quad\tP\,paper\quad\tS\,scissors\quad\tQ\,random opening}}
+
 \begin{document}
-\thispagestyle{plain}
-\workshoptitle{Meet the house bots}{Patterns and personalities}
-{\small The route labels point to the relevant exercises. Try the hints below if you get stuck predicting a bot.\par}
-\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}
-\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule
-\textbf{Copycat}\newline{\scriptsize\texttt{copycat}}\newline{\footnotesize\color{myblue}Beginner} & Copies your previous throw after a random opening. & If you last played rock, it will play rock next. Use your own history to choose a reply. \\[4pt]
-\addlinespace[3pt]
-\textbf{Cycle RPS}\newline{\scriptsize\texttt{cycle\_rps}}\newline{\footnotesize\color{myblue}Beginner} & Plays rock, paper, scissors, then repeats. & Work out the next move in the cycle and play the move that beats it. \\[4pt]
-\addlinespace[3pt]
-\textbf{Echo Two}\newline{\scriptsize\texttt{echo\_two}}\newline{\footnotesize\color{myblue}Beginner} & Copies your throw from two turns ago. & Use my\_history[-2] once two throws have finished. \\[4pt]
-\addlinespace[3pt]
-\textbf{Rocky}\newline{\scriptsize\texttt{rocky}}\newline{\footnotesize\color{myblue}Beginner} & Always plays rock. & Play paper. You should win every throw. \\[4pt]
-\addlinespace[3pt]
-\textbf{Biased Random}\newline{\scriptsize\texttt{biased\_random}}\newline{\footnotesize\color{myblue}Intermediate} & Independent throws: 60\% rock, 25\% paper, 15\% scissors. & Paper has expected net payoff +0.45 per throw. \\[4pt]
-\addlinespace[3pt]
-\textbf{Contrarian}\newline{\scriptsize\texttt{contrarian}}\newline{\footnotesize\color{myblue}Intermediate} & Plays the move that beats your previous throw, after a random opening. & If you last played rock, expect paper and reply with scissors. \\[4pt]
-\addlinespace[3pt]
-\textbf{Shifting Bias}\newline{\scriptsize\texttt{shifting\_bias}}\newline{\footnotesize\color{myblue}Intermediate} & Changes its favorite move every 50 throws, choosing it 70\% of the time. & Try a recent window or discount old counts. How long does your bot take to notice a switch? \\[4pt]
-\addlinespace[3pt]
-\textbf{Sticky}\newline{\scriptsize\texttt{sticky}}\newline{\footnotesize\color{myblue}Intermediate} & Repeats its last move 80\% of the time; each alternative has probability 10\%. & Counter its last move. Compare that with a bot that uses only total move counts. \\[4pt]
-\bottomrule\end{tabularx}\endgroup
+{\LARGE\bfseries House bot field guide}\hfill\legend
+\par\vspace{3pt}
+{\small\color{black!55}Bands are the workshop routes. The code name under each bot is what \code{--against} expects.}
+\par\vspace{6pt}
+\begin{bottable}
+\tablehead
+\tierband{mygreen}{Beginner}{Route 01 \textperiodcentered{} fixed patterns and copying}
+\botrow{Rocky}{rocky} & Always plays rock. & Play paper. You should win every throw. \\[1pt]
+\demo{\seq{Bot}{RRRRRRRRRR}}
+\hairline
+\botrow{Cycle RPS}{cycle\_rps} & Plays rock, paper, scissors, then repeats. & Work out the next move in the cycle and play the move that beats it. \\[1pt]
+\demo{\seq{Bot}{RPSRPSRPSR}}
+\hairline
+\botrow{Copycat}{copycat} & Copies your previous throw after a random opening. & If you last played rock, it will play rock next. Use your own history to choose a reply. \\[1pt]
+\demo{\seq{You}{RPPSRSSP}}
+\demo{\seq{Bot}{QRPPSRSS}\note{one throw behind you}}
+\hairline
+\botrow{Echo Two}{echo\_two} & Copies your throw from two turns ago. & Use \code{my\_history[-2]} once two throws have finished. \\[1pt]
+\demo{\seq{You}{RPSSRPRS}}
+\demo{\seq{Bot}{QQRPSSRP}\note{two throws behind you}}
+\tierband{myblue}{Intermediate}{Route 02 \textperiodcentered{} probabilities and drift}
+\botrow{Biased Random}{biased\_random} & Independent throws: 60\% rock, 25\% paper, 15\% scissors. & Paper has expected net payoff +0.45 per throw. \\[1pt]
+\demo{\seq{Bot}{RPRRSRPRRS}\note{a sample: about six rocks in ten}}
+\hairline
+\botrow{Contrarian}{contrarian} & Plays the move that beats your previous throw, after a random opening. & If you last played rock, expect paper and reply with scissors. \\[1pt]
+\demo{\seq{You}{RPPSRSSP}}
+\demo{\seq{Bot}{QPSSRPRR}\note{each throw beats the one above and to the left}}
+\hairline
+\botrow{Sticky}{sticky} & Repeats its last move 80\% of the time; each alternative has probability 10\%. & Counter its last move. Compare that with a bot that uses only total move counts. \\[1pt]
+\demo{\seq{Bot}{RRRRPPPPPS}\note{a sample: long runs, then a jump}}
+\hairline
+\botrow{Switcheroo}{switcheroo} & Plays rock for the first half of the match and scissors afterwards. & Compare counts over the last 30 throws with counts over the whole match. \\[1pt]
+\demo{\seq{Bot}{RRRRRR|SSSSSS}\note{switches at throw 250 of 501}}
+\hairline
+\botrow{Shifting Bias}{shifting\_bias} & Changes its favorite move every 50 throws, choosing it 70\% of the time. & Try a recent window or discount old counts. How long does your bot take to notice a switch? \\[1pt]
+\demo{\seq{Bot}{RRPRRRSRRR|PPPRPSPPPP}\note{a sample: throws 1--50, then 51--100}}
+\hairline
+\botrow{Win Stay Lose Shift}{win\_stay\_lose\_shift} & Repeats after a win or draw. After a loss, chooses either other move with equal probability. & After it wins or draws, counter its last move. After it loses, play the move its last move beats. \\[1pt]
+\demo{\seq{You}{SRRPPSRR}}
+\demo{\seq{Bot}{RRRRSSSP}\note{stays after a win or draw, shifts after a loss}}
+\tablefoot
+\end{bottable}
 \clearpage
-\workshoptitle{Meet the house bots}{Memory, adaptation and a baseline}
-{\small The route labels point to the relevant exercises. Try the hints below if you get stuck predicting a bot.\par}
-\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}
-\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}
-\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule
-\textbf{Switcheroo}\newline{\scriptsize\texttt{switcheroo}}\newline{\footnotesize\color{myblue}Intermediate} & Plays rock for the first half of the match and scissors afterwards. & Compare counts over the last 30 throws with counts over the whole match. \\[4pt]
-\addlinespace[3pt]
-\textbf{Win Stay Lose Shift}\newline{\scriptsize\texttt{win\_stay\_lose\_shift}}\newline{\footnotesize\color{myblue}Intermediate} & Repeats after a win or draw. After a loss, chooses either other move with equal probability. & After it wins or draws, counter its last move. After it loses, play the move its last move beats. \\[4pt]
-\addlinespace[3pt]
-\textbf{Cycle Counter}\newline{\scriptsize\texttt{cycle\_counter}}\newline{\footnotesize\color{myblue}Advanced} & Counters your most common move over the last ten throws. & Model its sliding window, including the tie-break from the earliest tied occurrence. \\[4pt]
-\addlinespace[3pt]
-\textbf{Double Take}\newline{\scriptsize\texttt{double\_take}}\newline{\footnotesize\color{myblue}Advanced} & Repeats a nine-throw cycle. Each move and each adjacent pair appears equally often. & Record what follows each pair of moves. Compare this with a table using only the last move. \\[4pt]
-\addlinespace[3pt]
-\textbf{Markov}\newline{\scriptsize\texttt{markov}}\newline{\footnotesize\color{myblue}Advanced} & Learns what follows your last move and counters that prediction. & Reconstruct its counts from your own history, or balance what follows each of your moves. \\[4pt]
-\addlinespace[3pt]
-\textbf{Adaptive Ensemble}\newline{\scriptsize\texttt{adaptive\_ensemble}}\newline{\footnotesize\color{myblue}Expert} & Chooses among repeat, frequency, cycle and reactive predictors using their recent accuracy. & Change your rule partway through a match and measure how long it takes to catch up. \\[4pt]
-\addlinespace[3pt]
-\textbf{Sequence Hunter}\newline{\scriptsize\texttt{sequence\_hunter}}\newline{\footnotesize\color{myblue}Expert} & Looks for earlier occurrences of your last 2-5 moves within your last 150 throws. & Try a sequence where the same five-move ending has different successors. Which does it predict? \\[4pt]
-\addlinespace[3pt]
-\textbf{Random Uniform}\newline{\scriptsize\texttt{random\_uniform}}\newline{\footnotesize\color{myblue}Baseline} & Chooses each move independently with equal probability, using a seeded generator. & Use several seeds to see how much scores vary against random play. \\[4pt]
-\bottomrule\end{tabularx}\endgroup
+\begin{bottable}
+\tablehead
+\tierband{myorange}{Advanced}{Route 03 \textperiodcentered{} memory and context}
+\botrow{Cycle Counter}{cycle\_counter} & Counters your most common move over the last ten throws. & Model its sliding window, including the tie-break from the earliest tied occurrence. \\[1pt]
+\demo{\seq{You}{RPRRSPRSRP}\then\seq{Bot}{P}\note{rock led your last ten, so it plays paper}}
+\hairline
+\botrow{Double Take}{double\_take} & Repeats a nine-throw cycle. Each move and each adjacent pair appears equally often. & Record what follows each pair of moves. Compare this with a table using only the last move. \\[1pt]
+\demo{\seq{Bot}{RRPRSPPSS|RRPRSPPSS}\note{starts at a random point in the cycle}}
+\hairline
+\botrow{Markov}{markov} & Learns what follows your last move and counters that prediction. & Reconstruct its counts from your own history, or balance what follows each of your moves. \\[1pt]
+\demo{\seq{You}{RPRSRPR}\then\seq{Bot}{S}\note{after rock you have mostly played paper, so it plays scissors}}
+\tierband{myred}{Expert}{Route 04 \textperiodcentered{} adaptation}
+\botrow{Adaptive Ensemble}{adaptive\_ensemble} & Chooses among repeat, frequency, cycle and reactive predictors using their recent accuracy. & Change your rule partway through a match and measure how long it takes to catch up. \\[1pt]
+\demo{\note{No fixed pattern to draw: after every throw it re-scores four predictors and follows the current leader.}}
+\hairline
+\botrow{Sequence Hunter}{sequence\_hunter} & Looks for earlier occurrences of your last 2--5 moves within your last 150 throws. & Try a sequence where the same five-move ending has different successors. Which does it predict? \\[1pt]
+\demo{\seq{You}{RPSRSPRPS}\then\seq{Bot}{P}\note{the last three throws appeared once before, followed by rock}}
+\tierband{mygray}{Baseline}{No route \textperiodcentered{} the control opponent}
+\botrow{Random Uniform}{random\_uniform} & Chooses each move independently with equal probability, using a seeded generator. & Use several seeds to see how much scores vary against random play. \\[1pt]
+\demo{\seq{Bot}{PSRRSPSRPS}\note{a sample: a different seed gives a different sequence}}
+\tablefoot
+\end{bottable}
+
+\vspace{8pt}
+\begin{context}
+{\large\bfseries Quick reference}\par\vspace{4pt}
+\begingroup\small
+\noindent\begin{minipage}[t]{.56\linewidth}\raggedright
+\textbf{A bot that beats Cycle RPS}\par\vspace{-3pt}
+\begin{lstlisting}[style=python,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+COUNTER = {
+    Move.ROCK: Move.PAPER,
+    Move.PAPER: Move.SCISSORS,
+    Move.SCISSORS: Move.ROCK,
+}
+
+def next_move(my_history, opponent_history, match_state):
+    if not opponent_history:
+        return Move.PAPER
+    prediction = COUNTER[opponent_history[-1]]
+    return COUNTER[prediction]
+\end{lstlisting}
+\code{COUNTER[move]} is the move that beats \code{move}: paper beats rock, rock beats scissors, scissors beat paper. Swap the prediction line to change which bot you beat.
+\end{minipage}\hfill
+\begin{minipage}[t]{.40\linewidth}\raggedright
+\textbf{Playing a bot}\par\vspace{2pt}
+\code{rps-cli play --against rocky}\par\vspace{2pt}
+\begin{itemize}[leftmargin=1.2em,itemsep=1pt]
+\item Longer match: \code{--best-of 501}
+\item Several bots: \code{--against rocky,sticky}
+\item Repeatable seeds: \code{--games 5 --seed 100}
+\item Before submitting: \code{rps-cli test}, then \code{rps-cli validate}
+\end{itemize}
+\vspace{3pt}
+\textbf{Reading history}\par\vspace{2pt}
+\begin{itemize}[leftmargin=1.2em,itemsep=1pt]
+\item \code{opponent\_history[-1]} is its last throw.
+\item \code{my\_history[-2]} is your throw two turns ago.
+\item Both are empty before the first throw: check \code{if not opponent\_history}.
+\end{itemize}
+\end{minipage}
+\endgroup
+\end{context}
 \end{document}

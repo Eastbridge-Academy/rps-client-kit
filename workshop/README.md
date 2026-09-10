@@ -61,7 +61,7 @@ Seven PDFs, **33 pages total**:
 - **02 Intermediate — 6 pages:** randomness, bot mechanics, counts and windows.
 - **03 Advanced — 6 pages:** randomness, bot mechanics, Markov models.
 - **04 Expert — 7 pages:** randomness, bot mechanics, portfolios and match utility.
-- **05 House-bot field guide — 2 landscape pages:** all 16 opponents and hints.
+- **05 House-bot field guide — 2 pages:** all 16 opponents, hints and a quick reference.
 - **06 Facilitator notes — 3 pages:** preparation, schedule, checks and answers.
 
 `output/rps-event-kit.zip` contains all PDFs, the client wheel and locked

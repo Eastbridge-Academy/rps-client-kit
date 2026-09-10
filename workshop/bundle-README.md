@@ -52,7 +52,7 @@ exercises. Setup is not repeated in the level handouts.
 | 02 Intermediate, 6 pages | Comfortable with lists, dictionaries and functions | Payoff estimates, windows, conditional behavior |
 | 03 Advanced, 6 pages | Ready to build and test a statistical model | Markov models, order two, backoff and model tests |
 | 04 Expert, 7 pages | Experienced with probability and algorithms | Expert weighting, regret assumptions, terminal utility |
-| 05 House field guide, 2 landscape pages | Any route; hints optional | All 16 personalities and experiments |
+| 05 House field guide, 2 pages | Any route; hints optional | All 16 personalities and experiments |
 
 Facilitator notes and complete reference bots are in facilitator/. They can be
 shared as optional comparisons after participants have explored their own ideas.

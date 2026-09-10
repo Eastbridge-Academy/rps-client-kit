@@ -13,11 +13,11 @@ We'll calculate payoff as \textbf{+1 for a win, 0 for a draw, -1 for a loss}. Ad
 \renewcommand{\arraystretch}{1.17}
 \begin{tabularx}{\linewidth}{@{}YYYY@{}}
 \toprule
-\textbf{Your move} & \textbf{Opponent rock} & \textbf{Opponent paper} & \textbf{Opponent scissors} \\
+\colhead{Your move} & \colhead{Opponent} \tR & \colhead{Opponent} \tP & \colhead{Opponent} \tS \\
 \midrule
-Rock & 0 & -1 & +1 \\
-Paper & +1 & 0 & -1 \\
-Scissors & -1 & +1 & 0 \\
+\tR\ Rock & 0 & $-1$ & $+1$ \\
+\tP\ Paper & $+1$ & 0 & $-1$ \\
+\tS\ Scissors & $-1$ & $+1$ & 0 \\
 \bottomrule
 \end{tabularx}\endgroup\par\smallskip
 

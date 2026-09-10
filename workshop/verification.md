@@ -16,7 +16,11 @@
   paths containing spaces and preservation of participant edits pass locally.
 - CI also builds the PDFs and ZIP on Linux and tests the extracted ZIP on
   Windows with the handout's PowerShell installation commands. The Windows
-  check invokes the executable directly, without script activation.
+  check invokes the executable directly, without script activation. All seven
+  jobs pass: [CI for 79a2852](https://github.com/Eastbridge-Academy/rps-client-kit/actions/runs/34505062382).
+- A final PDF text-extraction check verifies literal double hyphens in inline
+  commands. The typewriter font disables ligatures so `--version` and `--force`
+  remain copyable command options. Prose keeps its normal ligatures.
 - This release changes documentation and distribution; bot and SDK behavior
   remain as in 0.3.0. The physical Raspberry Pi lab-image check still applies.
 

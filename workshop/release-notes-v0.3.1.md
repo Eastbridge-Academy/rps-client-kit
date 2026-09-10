@@ -23,7 +23,8 @@ prediction, explains the bot API, then goes into its exercises.
 - **06 Facilitator notes:** 3 pages, schedule, preparation and worked answers.
 
 The handouts are now authored directly in LaTeX. Numbered Python listings have
-an internal gutter so line numbers clear the yellow box's border. The seven
+an internal gutter so line numbers clear the yellow box's border. Inline command
+options preserve their literal double hyphens when copied from the PDF. The seven
 PDFs contain 33 pages; setup instructions no longer repeat in every level.
 The SDK and bot behavior are unchanged from 0.3.0.
 

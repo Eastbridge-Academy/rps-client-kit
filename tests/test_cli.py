@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from click import unstyle
 from typer.testing import CliRunner
 
 from rps_client.cli import app
@@ -40,7 +41,9 @@ def test_version_and_help_work_even_with_broken_project_config(tmp_path, monkeyp
     assert "0.3.0" in version.stdout
     result = runner.invoke(app, ["info"])
     assert result.exit_code != 0
-    assert "valid JSON" in result.output
+    # Rich may colour individual words and wrap the error panel on Windows.
+    message = " ".join(unstyle(result.output).replace("│", " ").split())
+    assert "valid JSON" in message
     assert "Traceback" not in result.output
 
 

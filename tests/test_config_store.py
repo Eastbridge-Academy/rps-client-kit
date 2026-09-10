@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from rps_client.config import ConfigStore
@@ -37,4 +38,6 @@ def test_environment_override_is_not_persisted_by_another_setting(tmp_path, monk
     store.league = "rehearsal"
     store.save()
     assert json.loads(store.path.read_text())["token"] is None
-    assert store.path.stat().st_mode & 0o777 == 0o600
+    # Windows uses ACLs; stat() does not expose POSIX owner/group permissions.
+    if os.name == "posix":
+        assert store.path.stat().st_mode & 0o777 == 0o600

@@ -1,0 +1,60 @@
+\documentclass[11pt]{article}
+\newcommand{\routelabel}{Setup and practice}
+\usepackage{eastbridge-handout}
+\hypersetup{pdftitle={RPS Workshop: Setup and practice}}
+\begin{document}
+\thispagestyle{plain}
+
+\workshoptitle{A bot in the arena}{Getting started}
+
+\begin{context}
+You'll write a Python bot that plays rock, paper, scissors against everyone else's bots. Both players choose at the same time. We'll start by entering the supplied random bot, then spend most of the session changing how it plays.
+
+\end{context}
+
+\subsection*{Start with a working project}
+
+\textbf{Lab machine:} the kit is already in your home folder. Run the commands below. \textbf{Personal laptop:} first follow page 2 (macOS/Linux) or page 3 (Windows), then return here to submit. All levels use this setup handout.
+
+\begin{lstlisting}[style=shell]
+cd ~/rps-event-kit
+sh ./start.sh ~/rps-bot
+cd ~/rps-bot
+source .venv/bin/activate
+rps-cli test
+rps-cli validate
+\end{lstlisting}
+
+These commands install the kit and its dependencies from the supplied folder. \textbf{uv and Python 3.11+} are already installed on the lab machines. Windows users should use \code{.\textbackslash{}.venv\textbackslash{}Scripts\textbackslash{}rps-cli.exe} wherever this handout says \code{rps-cli}. Whenever you open a new terminal, return to \code{\textasciitilde{}/rps-bot} and activate \code{.venv} again.
+
+
+Open \textbf{bot.py} in your editor. It currently chooses a random move, and its tests should pass as supplied. If you accidentally delete a starter file, \code{rps-cli init} will restore missing files. Adding \code{--force} also overwrites files you've edited.
+
+
+\subsection*{Submit your bot}
+
+Your facilitator will give you the \textbf{server URL, league slug and submit token}. Substitute those values in the commands below, including replacing \code{TOKEN} with the supplied token.
+
+
+\begin{lstlisting}[style=shell]
+rps-cli config set api_url https://arena.eastbrid.ge
+rps-cli config set league rps
+rps-cli config set token TOKEN
+rps-cli doctor
+rps-cli submit "Your Team Name"
+rps-cli status "Your Team Name"
+\end{lstlisting}
+
+The settings are saved in your project folder. Reuse the \textbf{same team name} for later submissions so they replace your earlier version. The server checks each upload before letting it play; \code{status} shows when it becomes active, or why it was rejected. Run \code{submit} again whenever you want the tournament to use your latest edits.
+
+
+\begin{checkpoint}
+\textbf{Before moving on:} run \code{status} and find your active version. If you're stuck on installation or submission, ask a facilitator to take a look.
+\end{checkpoint}
+\clearpage
+\input{shared/setup-macos-linux}
+\clearpage
+\input{shared/setup-windows}
+\clearpage
+\input{shared/practice}
+\end{document}

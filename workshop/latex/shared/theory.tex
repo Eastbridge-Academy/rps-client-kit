@@ -1,0 +1,36 @@
+\workshoptitle{Can you beat random play?}{Randomness and prediction}
+
+\begin{context}
+Against a bot that always chooses rock, you can win every throw by choosing paper. Against one that chooses each move independently with probability one third, any move you pick wins, loses and draws with equal probability. Its previous moves give you no help with the next one.
+
+\end{context}
+
+We'll calculate payoff as \textbf{+1 for a win, 0 for a draw, -1 for a loss}. Adding those values over a match gives your wins minus your losses. Whoever wins more throws wins the match.
+
+
+\smallskip\begingroup\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.17}
+\begin{tabularx}{\linewidth}{@{}YYYY@{}}
+\toprule
+\textbf{Your move} & \textbf{Opponent rock} & \textbf{Opponent paper} & \textbf{Opponent scissors} \\
+\midrule
+Rock & 0 & -1 & +1 \\
+Paper & +1 & 0 & -1 \\
+Scissors & -1 & +1 & 0 \\
+\bottomrule
+\end{tabularx}\endgroup\par\smallskip
+
+\subsection*{The Nash equilibrium}
+
+When both players choose independently and uniformly, neither can improve their expected payoff by changing strategy alone. This is a \textbf{Nash equilibrium}. Even a bot with the full match history and a very good prediction algorithm has expected net payoff zero against an independent uniform opponent.
+
+
+Several house bots do something more predictable. One favors rock; another repeats a sequence; Copycat copies your last move. You can use those habits to predict what comes next and choose a winning reply. Much of the workshop is about learning to recognize them from a short history.
+
+
+A repeating \code{rock, paper, scissors} bot is an especially helpful example. Count its moves after any complete cycle and you'll find equal totals. But once you've seen rock, you know paper is coming. A random bot can also produce that sequence by chance, so you'll need more than one occurrence before treating it as a pattern.
+
+
+The kit uses seeded pseudorandom generators to make practice matches repeatable. The exercises use those seeds to compare versions under the same conditions. They assume each bot's current random choice is private; reconstructing an opponent's generator from its seed would be a different problem.
+\par

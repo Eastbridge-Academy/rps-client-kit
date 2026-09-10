@@ -1,0 +1,182 @@
+\documentclass[11pt]{article}
+\newcommand{\routelabel}{Beginner}
+\usepackage{eastbridge-handout}
+\hypersetup{pdftitle={RPS Workshop: Beginner}}
+\begin{document}
+\thispagestyle{plain}
+
+\input{shared/theory}
+\clearpage
+\input{shared/mechanics}
+\clearpage
+\workshoptitle{Find a pattern}{Route A / Beginner}
+
+\begin{context}
+Start here if you're new to Python. We'll first beat a bot that always plays rock, then try a few opponents whose moves follow a rule. Along the way you'll use return statements, dictionaries and the two history lists.
+
+\end{context}
+
+\lessonstep{Step 1}{beat Rocky}
+
+Rocky always plays rock. In bot.py, replace the final line of next\_move with:
+
+
+\begin{lstlisting}[style=python,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+    return Move.PAPER
+\end{lstlisting}
+
+Keep the spaces at the beginning of the line. In Python, indentation says which statements belong to a function. \code{return} sends your choice back to the game. It does not print it on the screen.
+
+
+\begin{lstlisting}[style=shell,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+rps-cli test
+rps-cli play --against rocky --best-of 501
+\end{lstlisting}
+
+You should win \textbf{501-0-0} against Rocky, with zero errors. Try returning rock, then scissors. Predict the score before each run and put paper back afterwards. If a test fails, its traceback gives the line where Python ran into trouble.
+
+
+\lessonstep{Step 2}{a dictionary of replies}
+
+Add this dictionary above next\_move, outside the function:
+
+
+\begin{lstlisting}[style=python]
+COUNTER = {
+    Move.ROCK: Move.PAPER,
+    Move.PAPER: Move.SCISSORS,
+    Move.SCISSORS: Move.ROCK,
+}
+\end{lstlisting}
+
+\code{COUNTER[Move.ROCK]} looks up the value stored for rock, which is paper. Once you've guessed what the opponent will play, this dictionary gives you the move that beats it.
+
+
+Try \code{return COUNTER[Move.ROCK]} and run the Rocky match again. You should get the same score as before.
+
+
+\begin{checkpoint}
+\textbf{Check:} what do \code{COUNTER[Move.PAPER]} and \code{COUNTER[Move.SCISSORS]} return? Run each against Rocky. Can you account for the scores?
+\end{checkpoint}
+
+\textbf{Next opponent:} \code{cycle\_rps} repeats rock, paper, scissors. Write its first six moves and a winning reply under each one. How would your paper-only bot do?
+\par
+\clearpage
+\section*{Predict the next move}
+
+\begin{context}
+Cycle RPS moves on after every throw. If it just played rock, it's about to play paper, so you'll need scissors. Let's use the last move to work out the next one.
+
+\end{context}
+
+\lessonstep{Step 3}{follow the cycle}
+
+For \code{cycle\_rps}, the next item in the cycle happens to be \code{COUNTER[last\_move]}. Your winning reply is another lookup:
+
+
+\begin{lstlisting}[style=python]
+def next_move(my_history, opponent_history, match_state):
+    if not opponent_history:
+        return Move.PAPER
+    prediction = COUNTER[opponent_history[-1]]
+    return COUNTER[prediction]
+\end{lstlisting}
+
+The first branch handles the empty history: \code{if not opponent\_history} is true before any throws have finished. Later calls use \code{[-1]}, Python's index for the last item in a list.
+
+
+\begin{lstlisting}[style=shell,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+rps-cli play --against cycle_rps --best-of 501
+\end{lstlisting}
+
+Cycle RPS opens with rock, so paper wins the first throw too. Now change your opening to a random choice and run it again. How many throws did that change affect?
+
+
+\lessonstep{Step 4}{play Copycat}
+
+Copycat chooses a random opening, then copies \textbf{your previous move}. If you played rock last time, its next choice is rock, regardless of what it played itself.
+
+
+Change the prediction line to use \code{my\_history}. Keep the opening branch, since Copycat's first move is random. Test the result on Copycat, then run the same bot against Cycle RPS. Where does its prediction go wrong?
+
+
+\smallskip\begingroup\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.17}
+\begin{tabularx}{\linewidth}{@{}L{.25\linewidth}YYY@{}}
+\toprule
+\textbf{Completed throw} & \textbf{You played} & \textbf{Copycat played} & \textbf{What will Copycat play next?} \\
+\midrule
+\rule{0pt}{22pt}1 & Rock & Scissors &  \\
+\rule{0pt}{22pt}2 & Paper & Rock &  \\
+\rule{0pt}{22pt}3 & Scissors & Paper &  \\
+\bottomrule
+\end{tabularx}\endgroup\par\smallskip
+
+\textbf{Try Echo Two:} this bot copies your move from \textbf{two throws ago}. Which index will you need? How many entries must the history have before you can use it? Look at the score after the first two throws, once Echo Two has something to copy.
+
+
+\begin{checkpoint}
+\textbf{Save your work:} keep a copy of each bot that works. Label it with the opponent it was written for; you'll combine these ideas on the next page.
+\end{checkpoint}
+\clearpage
+\section*{Recognizing an opponent}
+
+\begin{context}
+The tournament doesn't tell next\_move which opponent it's facing. To choose between your cycle and Copycat strategies, you'll have to inspect the moves played so far.
+
+\end{context}
+
+\lessonstep{Step 5}{look for the cycle}
+
+Suppose you want to recognize the cycle. After eight completed throws, check whether each recent move follows the cycle's rule. For a pair of adjacent opposing moves, the check is:
+
+
+\begin{lstlisting}[style=python,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+opponent_history[i] == COUNTER[opponent_history[i - 1]]
+\end{lstlisting}
+
+Check several adjacent pairs: a random bot can match a short pattern by accident. If the checks agree, predict the continuation. Otherwise keep the random baseline.
+
+
+For Copycat, compare \code{opponent\_history[i]} with \code{my\_history[i - 1]} after the opening. The offset matters because Copycat copies your preceding throw. For Echo Two, use a gap of two instead.
+
+
+Start with one working detector. If two hypotheses fit the same short history, gather more evidence before choosing between them.
+
+
+\lessonstep{Step 6}{run a small comparison}
+
+\begin{lstlisting}[style=shell]
+rps-cli play --against rocky,cycle_rps,copycat,echo_two
+rps-cli play --against random_uniform --games 5 --seed 900
+rps-cli validate
+\end{lstlisting}
+
+Describe each version in a notebook: \enquote{paper only} or \enquote{cycle detector with eight observations}. Record the opponent, seed, throw W-L-D and errors. Change one rule at a time.
+
+
+\smallskip\begingroup\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.17}
+\begin{tabularx}{\linewidth}{@{}L{.25\linewidth}YYY@{}}
+\toprule
+\textbf{Version} & \textbf{Opponent and seed} & \textbf{Throws W-L-D} & \textbf{What did you learn?} \\
+\midrule
+\rule{0pt}{22pt}First working bot &  &  &  \\
+\rule{0pt}{22pt}One predictor &  &  &  \\
+\rule{0pt}{22pt}Combined bot &  &  &  \\
+\bottomrule
+\end{tabularx}\endgroup\par\smallskip
+
+If the bot reports errors, run the tests and \code{validate} to find the problem. If it runs normally but loses, inspect a few throws where its prediction was wrong. Which rule was it using?
+
+
+\subsection*{Submit your latest version}
+
+Submit under your existing team name and check \code{status}. Open a match on the dashboard and walk through a few throws with a partner. Show them how your bot chose its move, including any guesses that went wrong.
+
+
+\textbf{Want to try another route?} The intermediate packet uses counts to predict bots that favor certain moves without repeating an exact pattern.
+\par
+\end{document}

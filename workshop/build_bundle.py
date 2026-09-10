@@ -35,8 +35,12 @@ def main():
     if not wheel.is_file():
         raise RuntimeError("Build the kit with uv build first")
     pdfs = sorted((OUTPUT / "pdf").glob("*.pdf"))
-    if len(pdfs) != 6:
-        raise RuntimeError("Build and inspect the six workshop PDFs first")
+    expected = {
+        "00-setup.pdf", "01-beginner.pdf", "02-intermediate.pdf", "03-advanced.pdf",
+        "04-expert.pdf", "05-house-bot-field-guide.pdf", "06-facilitator-notes.pdf",
+    }
+    if {pdf.name for pdf in pdfs} != expected:
+        raise RuntimeError("Build and inspect the seven current workshop PDFs; remove stale PDFs from output/pdf")
     destination = OUTPUT / "rps-event-kit"
     # Only this generated directory is replaced; never participant projects.
     if destination.exists():

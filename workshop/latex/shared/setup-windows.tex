@@ -1,0 +1,60 @@
+\workshoptitle{Bring your own laptop}{Windows 10 / 11}
+
+\begin{context}
+Download \textbf{rps-event-kit.zip} from the release page below. Right-click the
+ZIP and choose Extract All. Find the folder containing \textbf{start.sh},
+\textbf{wheelhouse} and \textbf{requirements.txt}; it may be one folder deeper
+than the first folder Windows opens.
+\end{context}
+
+{\small\url{https://github.com/Eastbridge-Academy/rps-client-kit/releases/latest}\par}
+
+\lessonstep{Step 1}{Install uv and Python}
+Open PowerShell from the Start menu. If \code{uv --version} already works,
+skip the installer command. Otherwise, run:
+
+\begin{lstlisting}[style=plaincode]
+winget install --id astral-sh.uv -e
+\end{lstlisting}
+
+Close PowerShell and open it again, then run:
+
+\begin{lstlisting}[style=plaincode]
+uv python install 3.12
+\end{lstlisting}
+
+If winget is unavailable, ask a facilitator or use the Windows installer at
+\url{https://docs.astral.sh/uv/getting-started/installation/}.
+These downloads need internet access; installing the kit and practicing use
+local files.
+
+\lessonstep{Step 2}{Create your bot project}
+In File Explorer, open the extracted folder containing \textbf{requirements.txt}.
+Click the address bar, type \code{powershell}, and press Enter. Run the commands
+below; each final backtick continues the command onto the next line.
+
+\begin{lstlisting}[style=plaincode]
+$RpsProject = "$HOME\rps-bot"
+uv venv --offline --python 3.12 "$RpsProject\.venv"
+uv pip install --offline --no-index `
+  --python "$RpsProject\.venv\Scripts\python.exe" `
+  --find-links .\wheelhouse -r .\requirements.txt
+cd $RpsProject
+.\.venv\Scripts\rps-cli.exe init
+.\.venv\Scripts\rps-cli.exe test
+.\.venv\Scripts\rps-cli.exe validate
+\end{lstlisting}
+
+Open \textbf{bot.py} in the new \textbf{rps-bot} folder. In your editor, select
+\textbf{.venv/Scripts/python.exe} as the Python interpreter.
+
+\lessonstep{Step 3}{Use the handouts}
+Where a handout says \code{rps-cli}, use
+\code{.\textbackslash{}.venv\textbackslash{}Scripts\textbackslash{}rps-cli.exe}.
+Each new PowerShell window needs \code{cd "\$HOME\textbackslash{}rps-bot"}
+first. You do not need to activate a PowerShell script or change its execution policy.
+
+\begin{checkpoint}
+\textbf{Join the event:} follow \emph{Submit your bot} on page 1, using the
+Windows executable path. Reuse the same team name for every upload.
+\end{checkpoint}

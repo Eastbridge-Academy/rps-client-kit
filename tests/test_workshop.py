@@ -89,7 +89,7 @@ def test_terminal_controller_matches_hand_calculation_and_changes_objective():
 
 
 def test_actual_beginner_handout_cycle_snippet_wins_all_501_throws():
-    blocks = re.findall(r"```python\n(.*?)```", (WORKSHOP / "beginner.md").read_text(), re.S)
+    blocks = re.findall(r"\\begin\{lstlisting\}\[style=python[^\]]*\]\n(.*?)\\end\{lstlisting\}", (WORKSHOP / "latex/01-beginner.tex").read_text(), re.S)
     namespace = {"Move": Move}
     dictionary = next(block for block in blocks if block.startswith("COUNTER ="))
     function = next(block for block in blocks if block.startswith("def next_move"))

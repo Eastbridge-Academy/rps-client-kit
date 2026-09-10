@@ -1,0 +1,32 @@
+\workshoptitle{Practice matches}{Scores and local testing}
+
+\begin{context}
+You can play practice matches on your own machine while your submitted bot competes in the arena. Save a copy before trying a new strategy, so you can compare the two versions or go back to the earlier one.
+
+\end{context}
+
+\subsection*{Reading the score}
+
+A \textbf{throw} is one simultaneous choice. A \textbf{match} is a fixed series, normally 501 throws. A \textbf{league round} schedules each pair of bots. Despite the historical name \code{best\_of}, the arena plays the full series; it does not stop at 251 wins. Drawn throws still count, and a 501-throw match can finish level.
+
+
+For example, a 501-throw match ending 290-102 had 109 draws. The rating system records a match win for the first bot, regardless of the size of that margin. Local practice reports match results and throw totals; ratings belong to the arena.
+
+
+\begin{lstlisting}[style=shell,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+rps-cli play --against random_uniform --games 5 --seed 100
+\end{lstlisting}
+
+\begin{checkpoint}
+\textbf{Comparing versions:} use the same opponents, seeds and series length for both bots. Once you've chosen a version, try it on some fresh seeds as well. Check the error counts before you read much into the score.
+\end{checkpoint}
+
+\subsection*{What gets uploaded}
+
+Your upload includes the installed \code{rpsdk}, imported local helper modules and packages, and files in \code{data/}. Other packages from your virtual environment are left out, so use the standard library for these exercises. Open data files relative to \code{Path(\_\_file\_\_).parent}. Each move has a time limit; network calls, sleeps and large training jobs are likely to exceed it.
+
+
+\subsection*{During the session}
+
+Allow about 20 minutes for setup and the rules, then 70 minutes for your chosen route. Leave another 20 minutes to test your final version on fresh seeds and 10 to submit it. You can skip an optional exercise or switch routes whenever you like.
+\par

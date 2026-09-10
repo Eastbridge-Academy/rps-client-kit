@@ -1,0 +1,57 @@
+\workshoptitle{Bring your own laptop}{macOS and Linux}
+
+\begin{context}
+Download the event kit, install uv and Python, and create a folder for your bot.
+The ZIP includes the client kit, its dependencies and all handouts. You do not
+need Git, a compiler or a copy of the Arena server.
+\end{context}
+
+\lessonstep{Step 1}{Download and extract the kit}
+Open the \href{https://github.com/Eastbridge-Academy/rps-client-kit/releases/latest}{GitHub release page}
+(address below) and choose \textbf{rps-event-kit.zip} under Assets. Extract it
+and find the folder containing \textbf{start.sh}, \textbf{wheelhouse} and
+\textbf{requirements.txt}. Keep these files together; your bot will live in a
+separate folder.
+
+{\small\url{https://github.com/Eastbridge-Academy/rps-client-kit/releases/latest}\par}
+
+\lessonstep{Step 2}{Install uv and Python}
+Open Terminal. If \code{uv --version} already works, skip the first command.
+Otherwise, install uv:
+
+\begin{lstlisting}[style=shell]
+curl -LsSf https://astral.sh/uv/install.sh | sh
+\end{lstlisting}
+
+Close Terminal and open it again, then install Python for the workshop:
+
+\begin{lstlisting}[style=shell]
+uv python install 3.12
+\end{lstlisting}
+
+These downloads need internet access. After this step, installing the kit and
+playing local matches use the downloaded files. Submitting your bot and viewing
+the tournament still need a connection.
+
+\lessonstep{Step 3}{Create your bot project}
+In Terminal, type \code{cd} followed by a space, drag the extracted folder
+containing \textbf{start.sh} into the window, and press Enter. On Linux, you can
+also right-click the folder and choose Open in Terminal. Then run:
+
+\begin{lstlisting}[style=shell]
+sh ./start.sh "$HOME/rps-bot"
+cd "$HOME/rps-bot"
+source .venv/bin/activate
+rps-cli test
+rps-cli validate
+\end{lstlisting}
+
+Open \textbf{bot.py} in your editor. Select the Python interpreter in
+\textbf{rps-bot/.venv} if your editor asks. Each new terminal needs the
+\code{cd} and \code{source} commands again.
+
+\begin{checkpoint}
+\textbf{Join the event:} return to \emph{Submit your bot} on page 1.
+The facilitator supplies the event token. Run all bot commands from your
+\textbf{rps-bot} folder.
+\end{checkpoint}

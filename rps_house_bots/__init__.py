@@ -8,7 +8,8 @@ from importlib import resources
 
 _BOTS_PACKAGE = "rps_house_bots.bots"
 
-# One catalogue feeds the CLI, event field guide and server seeding metadata.
+# Shared catalogue for the CLI and server seeding metadata.
+# Keep the printed guide in workshop/latex/05-house-bot-field-guide.tex in sync.
 _PROFILES = {
     "rocky": ("Beginner", "Always plays rock.", "Play paper. You should win every throw."),
     "cycle_rps": ("Beginner", "Plays rock, paper, scissors, then repeats.", "Work out the next move in the cycle and play the move that beats it."),

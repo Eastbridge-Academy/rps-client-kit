@@ -1,0 +1,57 @@
+\workshoptitle{What your bot sees}{Inside bot.py}
+
+\begin{context}
+For each match, the arena starts a fresh Python process and imports bot.py. It calls \code{setup(config)} once, if you've defined it, then asks \code{next\_move(...)} for each throw. Here is the starter bot:
+
+\end{context}
+
+\begin{lstlisting}[style=python]
+from random import Random
+from rpsdk import Move
+
+_rng = Random()
+
+def setup(config):
+    _rng.seed(config["seed"])
+
+def next_move(my_history, opponent_history, match_state):
+    return _rng.choice(list(Move))
+\end{lstlisting}
+
+Return \code{Move.ROCK}, \code{Move.PAPER} or \code{Move.SCISSORS} from next\_move. These values also have a comparison method: \code{a.beats(b)} tells you whether a beats b. The arena accepts lowercase strings too, though the named values help catch spelling mistakes.
+
+
+\subsection*{Reading the histories}
+
+Both history lists contain \textbf{completed throws, oldest first}. On the first call, both are empty. After two throws, you might see:
+
+
+\begin{lstlisting}[style=python,numbers=none,xleftmargin=4pt,framexleftmargin=0pt]
+my_history       == [Move.ROCK, Move.PAPER]
+opponent_history == [Move.SCISSORS, Move.ROCK]
+\end{lstlisting}
+
+You won both of those throws. \code{opponent\_history[-1]} gives their last move, while \code{my\_history[-1]} gives yours. Check that a list has an entry before using \code{[-1]}, or two entries before using \code{[-2]}. The histories never include the throw you're about to choose.
+
+
+\smallskip\begingroup\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.17}
+\begin{tabularx}{\linewidth}{@{}L{.28\linewidth}Y@{}}
+\toprule
+\textbf{State entry} & \textbf{Meaning} \\
+\midrule
+\code{round} & Zero-based throw index. The next call above has round 2. \\
+\code{best\_of} & Total throws in this match, including draws. \\
+\code{last\_outcome} & Your preceding throw's win, loss or draw; None initially. \\
+\code{seed} & Your bot's reproducibility seed. \\
+\code{timeouts}, \code{opponent\_timeouts} & Accumulated server timeouts in this match. \\
+\bottomrule
+\end{tabularx}\endgroup\par\smallskip
+
+Each match starts with empty histories and fresh learned state. Reset any global counters in setup so your bot also works when tests call setup repeatedly. Seed the random generator there once; next\_move can then draw from it throughout the match.
+
+
+\begin{checkpoint}
+\textbf{Try it on paper:} Copycat copies your preceding move. Given the two histories above, what will it play next? Which history did you use?
+\end{checkpoint}

@@ -1,0 +1,52 @@
+\documentclass[11pt,landscape]{article}
+\newcommand{\routelabel}{House bot field guide}
+\usepackage{eastbridge-handout}
+\geometry{landscape,left=.75in,right=.75in,top=1in,bottom=.75in}
+\setlength{\headwidth}{\textwidth}
+\hypersetup{pdftitle={RPS Workshop: House bot field guide}}
+\begin{document}
+\thispagestyle{plain}
+\workshoptitle{Meet the house bots}{Patterns and personalities}
+{\small The route labels point to the relevant exercises. Try the hints below if you get stuck predicting a bot.\par}
+\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}
+\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule
+\textbf{Copycat}\newline{\scriptsize\texttt{copycat}}\newline{\footnotesize\color{myblue}Beginner} & Copies your previous throw after a random opening. & If you last played rock, it will play rock next. Use your own history to choose a reply. \\[4pt]
+\addlinespace[3pt]
+\textbf{Cycle RPS}\newline{\scriptsize\texttt{cycle\_rps}}\newline{\footnotesize\color{myblue}Beginner} & Plays rock, paper, scissors, then repeats. & Work out the next move in the cycle and play the move that beats it. \\[4pt]
+\addlinespace[3pt]
+\textbf{Echo Two}\newline{\scriptsize\texttt{echo\_two}}\newline{\footnotesize\color{myblue}Beginner} & Copies your throw from two turns ago. & Use my\_history[-2] once two throws have finished. \\[4pt]
+\addlinespace[3pt]
+\textbf{Rocky}\newline{\scriptsize\texttt{rocky}}\newline{\footnotesize\color{myblue}Beginner} & Always plays rock. & Play paper. You should win every throw. \\[4pt]
+\addlinespace[3pt]
+\textbf{Biased Random}\newline{\scriptsize\texttt{biased\_random}}\newline{\footnotesize\color{myblue}Intermediate} & Independent throws: 60\% rock, 25\% paper, 15\% scissors. & Paper has expected net payoff +0.45 per throw. \\[4pt]
+\addlinespace[3pt]
+\textbf{Contrarian}\newline{\scriptsize\texttt{contrarian}}\newline{\footnotesize\color{myblue}Intermediate} & Plays the move that beats your previous throw, after a random opening. & If you last played rock, expect paper and reply with scissors. \\[4pt]
+\addlinespace[3pt]
+\textbf{Shifting Bias}\newline{\scriptsize\texttt{shifting\_bias}}\newline{\footnotesize\color{myblue}Intermediate} & Changes its favorite move every 50 throws, choosing it 70\% of the time. & Try a recent window or discount old counts. How long does your bot take to notice a switch? \\[4pt]
+\addlinespace[3pt]
+\textbf{Sticky}\newline{\scriptsize\texttt{sticky}}\newline{\footnotesize\color{myblue}Intermediate} & Repeats its last move 80\% of the time; each alternative has probability 10\%. & Counter its last move. Compare that with a bot that uses only total move counts. \\[4pt]
+\bottomrule\end{tabularx}\endgroup
+\clearpage
+\workshoptitle{Meet the house bots}{Memory, adaptation and a baseline}
+{\small The route labels point to the relevant exercises. Try the hints below if you get stuck predicting a bot.\par}
+\smallskip\begingroup\small\setlength{\tabcolsep}{7pt}\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{@{}L{.21\linewidth}L{.31\linewidth}Y@{}}
+\toprule\textbf{Bot / route} & \textbf{What it does} & \textbf{An experiment to try} \\\midrule
+\textbf{Switcheroo}\newline{\scriptsize\texttt{switcheroo}}\newline{\footnotesize\color{myblue}Intermediate} & Plays rock for the first half of the match and scissors afterwards. & Compare counts over the last 30 throws with counts over the whole match. \\[4pt]
+\addlinespace[3pt]
+\textbf{Win Stay Lose Shift}\newline{\scriptsize\texttt{win\_stay\_lose\_shift}}\newline{\footnotesize\color{myblue}Intermediate} & Repeats after a win or draw. After a loss, chooses either other move with equal probability. & After it wins or draws, counter its last move. After it loses, play the move its last move beats. \\[4pt]
+\addlinespace[3pt]
+\textbf{Cycle Counter}\newline{\scriptsize\texttt{cycle\_counter}}\newline{\footnotesize\color{myblue}Advanced} & Counters your most common move over the last ten throws. & Model its sliding window, including the tie-break from the earliest tied occurrence. \\[4pt]
+\addlinespace[3pt]
+\textbf{Double Take}\newline{\scriptsize\texttt{double\_take}}\newline{\footnotesize\color{myblue}Advanced} & Repeats a nine-throw cycle. Each move and each adjacent pair appears equally often. & Record what follows each pair of moves. Compare this with a table using only the last move. \\[4pt]
+\addlinespace[3pt]
+\textbf{Markov}\newline{\scriptsize\texttt{markov}}\newline{\footnotesize\color{myblue}Advanced} & Learns what follows your last move and counters that prediction. & Reconstruct its counts from your own history, or balance what follows each of your moves. \\[4pt]
+\addlinespace[3pt]
+\textbf{Adaptive Ensemble}\newline{\scriptsize\texttt{adaptive\_ensemble}}\newline{\footnotesize\color{myblue}Expert} & Chooses among repeat, frequency, cycle and reactive predictors using their recent accuracy. & Change your rule partway through a match and measure how long it takes to catch up. \\[4pt]
+\addlinespace[3pt]
+\textbf{Sequence Hunter}\newline{\scriptsize\texttt{sequence\_hunter}}\newline{\footnotesize\color{myblue}Expert} & Looks for earlier occurrences of your last 2-5 moves within your last 150 throws. & Try a sequence where the same five-move ending has different successors. Which does it predict? \\[4pt]
+\addlinespace[3pt]
+\textbf{Random Uniform}\newline{\scriptsize\texttt{random\_uniform}}\newline{\footnotesize\color{myblue}Baseline} & Chooses each move independently with equal probability, using a seeded generator. & Use several seeds to see how much scores vary against random play. \\[4pt]
+\bottomrule\end{tabularx}\endgroup
+\end{document}

@@ -85,15 +85,17 @@
   numberstyle=\tiny\color{codecomment},
   backgroundcolor=\color{codebg},
   frame=single,framerule=0.4pt,rulecolor=\color{black!20},
-  numbers=left,numbersep=7pt,xleftmargin=15pt,xrightmargin=4pt,
-  framexleftmargin=4pt,framexrightmargin=4pt,framesep=4pt,
+  % Put the number gutter inside the frame, with room for two-digit labels.
+  numbers=left,numbersep=7pt,xleftmargin=24pt,xrightmargin=4pt,
+  framexleftmargin=20pt,framexrightmargin=0pt,framesep=4pt,
   breaklines=true,breakatwhitespace=false,breakindent=12pt,
   columns=fullflexible,keepspaces=true,showstringspaces=false,
   upquote=true,tabsize=4,aboveskip=7pt,belowskip=7pt,
   morekeywords={True,False,None},literate={-}{-}1}
 \lstdefinestyle{shell}{style=python,language=bash,numbers=none,
-  morekeywords={uv,rps-cli,cd,source},xleftmargin=5pt}
-\lstdefinestyle{plaincode}{style=python,language={},numbers=none,xleftmargin=5pt}
+  morekeywords={uv,rps-cli,cd,source},xleftmargin=4pt,framexleftmargin=0pt}
+\lstdefinestyle{plaincode}{style=python,language={},numbers=none,
+  xleftmargin=4pt,framexleftmargin=0pt}
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}

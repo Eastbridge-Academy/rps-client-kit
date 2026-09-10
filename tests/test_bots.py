@@ -133,3 +133,40 @@ def test_new_bots_repeat_with_same_seed(slug, move_type):
             theirs.append(list(move_type)[index % 3])
         return mine
     assert run() == run()
+
+
+def test_catalogue_has_complete_teaching_metadata():
+    for bot in list_bots():
+        assert bot.level and bot.description and bot.hint
+        assert bot.game_type == "rps"
+
+
+def test_echo_two_reads_the_other_players_two_turn_lag(move_type):
+    bot = importlib.import_module("rps_house_bots.bots.echo_two")
+    bot.setup({"seed": 5})
+    assert bot.next_move([], [], {"round": 0}) in list(move_type)
+    assert bot.next_move([], [move_type.SCISSORS, move_type.ROCK], {"round": 2}) == move_type.SCISSORS
+
+
+def test_double_take_balances_pairs_but_has_predictable_second_order_context(move_type):
+    from collections import Counter
+    bot = importlib.import_module("rps_house_bots.bots.double_take")
+    bot.setup({"seed": 9})
+    moves = [bot.next_move([], [], {"round": turn}) for turn in range(11)]
+    assert Counter(moves[:9]) == {move: 3 for move in move_type}
+    pairs = [(moves[i], moves[i + 1]) for i in range(9)]
+    assert len(set(pairs)) == 9
+    continuation = {tuple(moves[i:i + 2]): moves[i + 2] for i in range(9)}
+    assert continuation[tuple(moves[9:11])] == bot.next_move([], [], {"round": 11})
+
+
+def test_sticky_rewards_conditioning_on_its_last_throw(move_type):
+    bot = importlib.import_module("rps_house_bots.bots.sticky")
+    bot.setup({"seed": 12})
+    history = []
+    repeats = 0
+    for turn in range(1000):
+        move = bot.next_move(history, [], {"round": turn})
+        repeats += bool(history and move == history[-1])
+        history.append(move)
+    assert 750 < repeats < 850

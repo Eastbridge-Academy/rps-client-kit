@@ -20,9 +20,6 @@
 \RequirePackage{titlesec}
 \RequirePackage{xurl}
 \RequirePackage[unicode]{hyperref}
-% Handouts are set in TeX Gyre Heros; code stays in Latin Modern Typewriter.
-\RequirePackage{tgheros}
-\renewcommand{\familydefault}{\sfdefault}
 
 % The same Solarized palette as the course handouts.
 \definecolor{myred}{RGB}{220,50,47}
@@ -40,13 +37,13 @@
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\raisebox{-0.2\height}{\includegraphics[height=14pt]{eastbridge-logo.pdf}}}
-\fancyhead[R]{\small\textsf{RPS Workshop\quad\textbullet\quad\routelabel}}
+\fancyhead[R]{\small RPS Workshop\quad\textbullet\quad\routelabel}
 \renewcommand{\headrulewidth}{0.2pt}
 \fancyfoot[C]{\thepage}
 \fancypagestyle{plain}{%
   \fancyhf{}
   \fancyhead[L]{\raisebox{-0.2\height}{\includegraphics[height=42pt]{eastbridge-logo.pdf}}}
-  \fancyhead[R]{\small\textsf{RPS Workshop\quad\textbullet\quad\routelabel}}
+  \fancyhead[R]{\small RPS Workshop\quad\textbullet\quad\routelabel}
   \renewcommand{\headrulewidth}{0.2pt}
   \fancyfoot[C]{\thepage}}
 
